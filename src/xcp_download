@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jul 15 23:03:36 2021
-@author: serge
+Created 20211010
+@author: serge Zaugg
 """
 
 import requests
 import pandas as pd
 import re
 import unidecode
+import os
+import sys
 
 n_files_per_spec = 3
 
-source_path = '/home/serge/sz_main/ml/data/xc_spec_03/'
+
+
+# evalutes to False in interactive mode and True in script mode 
+import __main__ as main
+print("hasattr(main, '__file__')", hasattr(main, '__file__'))
+
+if hasattr(main, '__file__') == True:
+    source_path = os.getcwd() # get dir from which script was called 
+else:
+    source_path = '/home/serge/sz_main/ml/data/xc_spec_03/' # dir used for devel 
+
 
 # helper 
 def convsec(x):
@@ -20,13 +32,10 @@ def convsec(x):
     x = int(x[0])*60 + int(x[1])
     return(x)
 
-
-
-
 bird_species = { 
     'Attila bolivianus': 'dull_capped_attila_song', 
-    'Amazona festiva': 'festive_amazon_call', 
-    # 'Cacicus cela': 's000040',
+    # 'Amazona festiva': 'festive_amazon_call', 
+    'Cacicus cela': 's000040',
     # 'Capito aurovirens': 's000015',
     # 'Crotophaga major': 's000031',
     # 'Crypturellus undulatus': 'undulated_tinamou_song', 
@@ -88,8 +97,9 @@ for ke, va in bird_species.items():
         finam2 = finam2.replace(' ', '_').replace('-', '_')
         finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
         finam2 = tag + finam2
-#        open(source_path + tag + finam2 + '_' + str(length_s) + '.mp3', 'wb').write(r.content)
-        open(source_path  + finam2 + '.mp3', 'wb').write(r.content)
+
+        open( os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
+
         # keep track simplified name
         re_i['file_new_stem'] = finam2
         re_i['sound_type'] = va
@@ -99,19 +109,13 @@ for ke, va in bird_species.items():
     df = pd.DataFrame(recs)
     df_all = df_all.append(df)
 
-df_all.to_csv(source_path + '_meta_all_' + '_meta.csv')
-df_all.to_pickle(source_path + '_meta_all_' + '_meta.pkl')
+df_all.to_csv(   os.path.join(source_path , '_meta_all_' + '_meta.csv') )
+df_all.to_pickle(os.path.join(source_path , '_meta_all_' + '_meta.pkl') )
 
 print(df_all['gen'].value_counts())
 
-## --------------
-#CC BY
-#CC BY-SA 
-#CC BY-ND # cannot be edited 
-#CC BY-NC
-#CC BY-NC-SA 
-#CC BY-NC-ND # cannot be edited 
 
-#search_str = 'nr:388556'
-# search_str = 'Attila+bolivianus'
+
+
+
 
