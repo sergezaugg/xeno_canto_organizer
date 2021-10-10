@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='xcproc',  
-    version='0.0.8',
+    version='0.0.9',
     scripts=['src/xcp_download'],
     author="Serge Zaugg",
     author_email="serge.zaugg@gmail.com",

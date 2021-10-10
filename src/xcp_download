@@ -11,20 +11,28 @@ import re
 import unidecode
 import os
 import sys
+import datetime 
 
-n_files_per_spec = 3
+n_files_per_spec = 1
 
+
+timstamp = 'download_' + datetime.datetime.now().strftime('%Y%m%dT%H%M%S') 
 
 
 # evalutes to False in interactive mode and True in script mode 
 import __main__ as main
-print("hasattr(main, '__file__')", hasattr(main, '__file__'))
 
 if hasattr(main, '__file__') == True:
-    source_path = os.getcwd() # get dir from which script was called 
+    start_path = os.getcwd() # get dir from which script was called 
 else:
-    source_path = '/home/serge/sz_main/ml/data/xc_spec_03/' # dir used for devel 
+    start_path = '/home/serge/sz_main/ml/data/xc_spec_03/' # dir used for devel 
 
+# create full path where files will be downloaded
+source_path = os.path.join(start_path, timstamp)
+
+# create dir 
+if not os.path.exists(source_path):
+    os.mkdir(source_path)
 
 # helper 
 def convsec(x):
@@ -34,7 +42,7 @@ def convsec(x):
 
 bird_species = { 
     'Attila bolivianus': 'dull_capped_attila_song', 
-    # 'Amazona festiva': 'festive_amazon_call', 
+    'Amazona festiva': 'festive_amazon_call', 
     'Cacicus cela': 's000040',
     # 'Capito aurovirens': 's000015',
     # 'Crotophaga major': 's000031',
@@ -109,8 +117,8 @@ for ke, va in bird_species.items():
     df = pd.DataFrame(recs)
     df_all = df_all.append(df)
 
-df_all.to_csv(   os.path.join(source_path , '_meta_all_' + '_meta.csv') )
-df_all.to_pickle(os.path.join(source_path , '_meta_all_' + '_meta.pkl') )
+df_all.to_csv(   os.path.join(start_path, timstamp + '_meta.csv') )
+df_all.to_pickle(os.path.join(start_path, timstamp + '_meta.pkl') )
 
 print(df_all['gen'].value_counts())
 
