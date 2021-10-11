@@ -5,19 +5,17 @@ Created 20211010
 @author: serge Zaugg
 """
 
+import os
+import re
+import json
 import requests
 import pandas as pd
-import re
 import unidecode
-import os
-import sys
 import datetime 
 
 n_files_per_spec = 1
 
-
 timstamp = 'download_' + datetime.datetime.now().strftime('%Y%m%dT%H%M%S') 
-
 
 # evalutes to False in interactive mode and True in script mode 
 import __main__ as main
@@ -40,28 +38,26 @@ def convsec(x):
     x = int(x[0])*60 + int(x[1])
     return(x)
 
-bird_species = { 
-    'Attila bolivianus': 'dull_capped_attila_song', 
-    'Amazona festiva': 'festive_amazon_call', 
-    'Cacicus cela': 's000040',
-    # 'Capito aurovirens': 's000015',
-    # 'Crotophaga major': 's000031',
-    # 'Crypturellus undulatus': 'undulated_tinamou_song', 
-    # 'Glaucidium brasilianum': 's000014',
-    # 'Leptotila rufaxilla': 'grayfronted_dove_song', 
-    # 'Monasa nigrifrons': 'black_fronted_nunbird_song',
-    # 'Myrmelastes hyperythrus': 's000010', 
-    # 'Nasica longirostris': 'updownsweep_2kHz_dur1s_01',
-    # 'Nyctibius grandis': 's000003', 
-    # 'Nyctibius griseus' : 's000021',
-    # 'Psarocolius angustifrons': 's000020', 
-    # 'Pitangus sulphuratus': 's000038',
-    # 'Ramphastos tucanus': 's000025',
-    # 'Taraba major': 's000022', 
-    # 'Trogon melanurus': 's000016',
-    # 'Xiphorhynchus guttatus': 's000011',
-    # 'Xiphorhynchus obsoletus': 's000023', 
-    }
+
+# load parameters from json file 
+with open(os.path.join(start_path, 'import_params01.json')) as f:
+    dl_params = json.load(f)
+
+bird_species = dl_params['species']
+dl_params['min_duration_s']
+dl_params['max_duration_s']
+
+cnt_str = '+cnt:' + dl_params['country']
+# cnt_str = '+cnt:bolivia'
+
+
+
+
+
+
+
+
+
 
 
 len(bird_species)
@@ -74,14 +70,15 @@ for ke, va in bird_species.items():
     search_str = ke.replace(' ', '+') 
     tag = search_str.replace('+','_') + '_'
      
-    url = 'https://www.xeno-canto.org/api/2/recordings?query=' + search_str
+    url = 'https://www.xeno-canto.org/api/2/recordings?query=' + search_str + cnt_str
     r = requests.get(url, allow_redirects=True)
     j = r.json()
-#    print (json.dumps(j, sort_keys=True, indent=4))
     recs = j['recordings']
 
+    len(recs)
+
     print(search_str + ' ' + str(len(recs)))
-    recs = [a for a in recs if convsec(a["length"]) > 10 and convsec(a["length"]) <= 600] 
+    recs = [a for a in recs if convsec(a["length"]) > dl_params['min_duration_s'] and convsec(a["length"]) <= dl_params['max_duration_s']] 
     # excude files with no-derivative licenses
     recs = [a for a in recs if not 'nd' in a['lic']]
     recs = [a for a in recs if not 'ND' in a['lic']]
