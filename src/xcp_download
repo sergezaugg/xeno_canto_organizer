@@ -6,6 +6,7 @@ Created 20211010
 """
 
 import os
+import sys
 import re
 import json
 import requests
@@ -13,7 +14,7 @@ import pandas as pd
 import unidecode
 import datetime 
 
-n_files_per_spec = 1
+n_files_per_spec = 2
 
 timstamp = 'download_' + datetime.datetime.now().strftime('%Y%m%dT%H%M%S') 
 
@@ -25,12 +26,26 @@ if hasattr(main, '__file__') == True:
 else:
     start_path = '/home/serge/sz_main/ml/data/xc_spec_03/' # dir used for devel 
 
-# create full path where files will be downloaded
-source_path = os.path.join(start_path, timstamp)
 
-# create dir 
-if not os.path.exists(source_path):
-    os.mkdir(source_path)
+if len(sys.argv) == 0:
+    print("---------------- 0")
+elif len(sys.argv) == 1:
+    print("No argument provided")
+    print(sys.argv)
+elif len(sys.argv) == 2:
+    print("First argument provided (.json)")
+    params_json = sys.argv[1]
+    print(params_json)
+
+
+
+# params_json = "import_params00.json"
+
+
+
+
+
+
 
 # helper 
 def convsec(x):
@@ -38,81 +53,86 @@ def convsec(x):
     x = int(x[0])*60 + int(x[1])
     return(x)
 
-
 # load parameters from json file 
-with open(os.path.join(start_path, 'import_params01.json')) as f:
+with open(os.path.join(start_path, params_json)) as f:
     dl_params = json.load(f)
 
 bird_species = dl_params['species']
 dl_params['min_duration_s']
 dl_params['max_duration_s']
-
-cnt_str = '+cnt:' + dl_params['country']
-# cnt_str = '+cnt:bolivia'
+dl_params['country']
 
 
 
 
 
 
+# create full path where files will be downloaded
+source_path = os.path.join(start_path, timstamp)
+
+# create dir 
+if not os.path.exists(source_path):
+    os.mkdir(source_path)
 
 
 
 
 
-len(bird_species)
-bird_species.keys()
 
 df_all = pd.DataFrame()
-for ke, va in bird_species.items():
-    print(ke, va)
-    
-    search_str = ke.replace(' ', '+') 
-    tag = search_str.replace('+','_') + '_'
-     
-    url = 'https://www.xeno-canto.org/api/2/recordings?query=' + search_str + cnt_str
-    r = requests.get(url, allow_redirects=True)
-    j = r.json()
-    recs = j['recordings']
+for cnt in dl_params['country']:
 
-    len(recs)
+    cnt_str = '+cnt:' + cnt
+    print(cnt_str)
 
-    print(search_str + ' ' + str(len(recs)))
-    recs = [a for a in recs if convsec(a["length"]) > dl_params['min_duration_s'] and convsec(a["length"]) <= dl_params['max_duration_s']] 
-    # excude files with no-derivative licenses
-    recs = [a for a in recs if not 'nd' in a['lic']]
-    recs = [a for a in recs if not 'ND' in a['lic']]
-    recs = [a for a in recs if 'A' in a['q'] or 'B' in a['q'] or 'C' in a['q']]
-    # take first n
-    recs = recs[0:n_files_per_spec]
-    print(search_str + ' ' + str(len(recs)))
-    print('')
-
-    # download 
-    for re_i in recs:
-        print(len(re_i["also"]))
-        re_i["also"] = ' + '.join(re_i["also"])
-        print(re_i["file"])
-        length_s = convsec(re_i["length"])
-        url = 'http:' + re_i["file"]
+    for ke in dl_params['species']:
+        print(ke)
+        
+        search_str = ke.replace(' ', '+') 
+        tag = search_str.replace('+','_') + '_'
+        
+        url = 'https://www.xeno-canto.org/api/2/recordings?query=' + search_str + cnt_str
         r = requests.get(url, allow_redirects=True)
-        # simplify filename stem 
-        finam2 = re_i["file-name"].replace('.mp3', '')
-        finam2 = unidecode.unidecode(finam2)
-        finam2 = finam2.replace(' ', '_').replace('-', '_')
-        finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
-        finam2 = tag + finam2
+        j = r.json()
+        recs = j['recordings']
 
-        open( os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
+        len(recs)
 
-        # keep track simplified name
-        re_i['file_new_stem'] = finam2
-        re_i['sound_type'] = va
+        print(search_str + ' ' + str(len(recs)))
+        recs = [a for a in recs if convsec(a["length"]) > dl_params['min_duration_s'] and convsec(a["length"]) <= dl_params['max_duration_s']] 
+        # excude files with no-derivative licenses
+        recs = [a for a in recs if not 'nd' in a['lic']]
+        recs = [a for a in recs if not 'ND' in a['lic']]
+        recs = [a for a in recs if 'A' in a['q'] or 'B' in a['q'] or 'C' in a['q']]
+        # take first n
+        recs = recs[0:n_files_per_spec]
+        print(search_str + ' ' + str(len(recs)))
+        print('')
 
-    # get meta-data as df from jsom 
-    [a.pop('sono') for a in recs]
-    df = pd.DataFrame(recs)
-    df_all = df_all.append(df)
+        # download 
+        for re_i in recs:
+            print(len(re_i["also"]))
+            re_i["also"] = ' + '.join(re_i["also"])
+            print(re_i["file"])
+            length_s = convsec(re_i["length"])
+            url = 'http:' + re_i["file"]
+            r = requests.get(url, allow_redirects=True)
+            # simplify filename stem 
+            finam2 = re_i["file-name"].replace('.mp3', '')
+            finam2 = unidecode.unidecode(finam2)
+            finam2 = finam2.replace(' ', '_').replace('-', '_')
+            finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
+            finam2 = tag + finam2
+
+            open( os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
+
+            # keep track simplified name
+            re_i['file_new_stem'] = finam2
+
+        # get meta-data as df from jsom 
+        [a.pop('sono') for a in recs]
+        df = pd.DataFrame(recs)
+        df_all = df_all.append(df)
 
 df_all.to_csv(   os.path.join(start_path, timstamp + '_meta.csv') )
 df_all.to_pickle(os.path.join(start_path, timstamp + '_meta.pkl') )
