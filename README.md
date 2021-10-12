@@ -1,6 +1,18 @@
-# A python pacakgs to download and organize Xeno-canto recordings
+# xcorganize
+A python-based command line tool to download and organize Xeno-Canto audio files for machine learning projects.
+
+## Summary
+- check summaries before download 
+- incremetaly download more and more data 
+- lightweigh meta-data format easy to postprocess with python
+- explicit selection of duration and licence
+- nested dirs with basic conversion (mp3 tp wav, resample, add noise to remove mp3 artefacts)
 
 
+
+## Usage
+
+## Installation
 
 ## prerequisites
 ffmpg

@@ -13,7 +13,7 @@ setuptools.setup(
     description="Python app to download and organize files from Xeno-Canto",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://xxxxxxx",
+    url="https://gitlab.com/Serge_23/xeno_canto_organizer",
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     python_requires=">=3.8",
