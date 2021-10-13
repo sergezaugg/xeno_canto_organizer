@@ -15,30 +15,34 @@ import unidecode
 import datetime 
 import argparse
 
+# constant parameters
+XC_API_URL = 'https://www.xeno-canto.org/api/2/recordings'
+
 # evalutes to False in interactive mode and True in script mode 
-import __main__ as main
+import __main__ as main_module
 
-if hasattr(main, '__file__') == True:
+cli_call = hasattr(main_module, '__file__')
+
+if cli_call:
     start_path = os.getcwd() # get dir from which script was called 
-else:
-    start_path = '/home/serge/sz_main/ml/data/xc_spec_03/' # dir used for devel 
+else: # devel 
+    start_path = '/home/serge/sz_main/ml/data/xc_spec_03/' 
 
 
 
-# Instantiate the parser
-parser = argparse.ArgumentParser(description='')
-# Required positional argument
-parser.add_argument('params_json', type=str, help='required, parameter file name (.json), can include relative path')
-# Optional argument
-parser.add_argument('-d', '--download', action='store_true', help='set -d to download files, else only a summary will be returned')
-args = parser.parse_args()
-params_json = args.params_json
-params_download = args.download
-
-# params_json = "import_params01.json"
-# params_download = False
-# print(params_json)
-# print(params_download)
+# parse CLI arguments
+if cli_call:
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('params_json', type=str, help='required, parameter file name (.json), can include relative path')
+    parser.add_argument('-d', '--download', action='store_true', help='set -d to download files, else only a summary will be returned')
+    args = parser.parse_args()
+    params_json = args.params_json
+    params_download = args.download
+else: # devel 
+    params_json = "import_params01.json"
+    params_download = False
+    print(params_json)
+    print(params_download)
 
 # helper 
 def convsec(x):
@@ -77,11 +81,13 @@ for cnt in dl_params['country']:
         search_str = ke.replace(' ', '+') 
         tag = search_str.replace('+','_') + '_'
         
-        url = 'https://www.xeno-canto.org/api/2/recordings?query=' + search_str + cnt_str
-        r = requests.get(url, allow_redirects=True)
+        full_query_string = XC_API_URL + '?query=' + search_str + cnt_str
+        r = requests.get(full_query_string, allow_redirects=True)
+
         j = r.json()
         recs = j['recordings']
 
+        # exclude if length no in specified range 
         recs = [a for a in recs if convsec(a["length"]) > dl_params['min_duration_s'] and convsec(a["length"]) <= dl_params['max_duration_s']]
          
         # excude files with no-derivative licenses
@@ -90,6 +96,7 @@ for cnt in dl_params['country']:
 
         # select based on quality rating of recordings
         recs = [a for a in recs if a['q'] in dl_params['quality']]
+
         len(recs)
 
 
@@ -102,8 +109,11 @@ for cnt in dl_params['country']:
                 re_i["also"] = ' + '.join(re_i["also"])
                 # print(re_i["file"])
                 length_s = convsec(re_i["length"])
-                url = 'http:' + re_i["file"]
-                r = requests.get(url, allow_redirects=True)
+
+                full_download_string = 'http:' + re_i["file"]
+
+                r = requests.get(full_download_string, allow_redirects=True)
+
                 # simplify filename stem 
                 finam2 = re_i["file-name"].replace('.mp3', '')
                 finam2 = unidecode.unidecode(finam2)
@@ -131,11 +141,11 @@ if params_download:
 if params_download:
     print('Files that were downloaded:')
 else:
-    print('Files to be downloaded:')     
-print(df_all['gen'].value_counts())
+    print('Files to be downloaded:')    
 
-
-
-
-
+df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
+print(pd.crosstab(df_all['full_spec_name'], df_all['cnt'], margins=True))
+print("")
+print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True))
+print("")
 
