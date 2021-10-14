@@ -67,12 +67,15 @@ dl_params['country']
 dl_params['quality']
 
 if params_download:
-    # Create dir where files will be downloaded
+    # Create time-stamped directory where files will be downloaded
     timstamp = 'download_' + datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
     source_path = os.path.join(main_download_path, timstamp)
     if not os.path.exists(source_path):
         os.mkdir(source_path)
     print("retrieving info from xc and downloading ...")    
+    # make a copy of parameter file
+    with open(os.path.join(source_path, params_json), 'w') as fp:
+        json.dump(dl_params, fp,  indent=4)
 else:
     print("retrieving info from xc ...")
 

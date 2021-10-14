@@ -5,9 +5,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='xcproc',  
-    version='0.0.10',
-    scripts=['src/xcp_download'],
+    name='xcorganizer',  
+    version='0.0.15',
+    scripts=['src/xco_download', 'src/xco_make_param'],
     author="Serge Zaugg",
     author_email="serge.zaugg@gmail.com",
     description="Python app to download and organize files from Xeno-Canto",

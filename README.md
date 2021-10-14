@@ -11,11 +11,36 @@ This tool set allows to easily download and organise XC data in a local reposito
 - lightweigh meta-data format easy to postprocess with python
 - explicit selection of duration and licence
 - nested dirs with basic conversion (mp3 tp wav, resample, add noise to remove mp3 artefacts)
-
-nice to haves
 - rename files as pure alphanumeric
 
 ## Usage
+
+- recomendation: Make a Python venv first 
+
+- Linux
+```bash
+# Make a empty directory where all your files and meta-data will be stored
+mkdir xc_all_downloads 
+# cd into it
+cd xc_all_downloads
+# create a template json parameter file
+xco_make_param 
+# get summary of what would be downloaded
+xco_download dparam00.json
+# download the mp3 files and the metadata
+xco_download dparam00.json -d
+# a time stamped directory was created and all file downloaded into it
+```
+
+- Windows Powershell
+```Powershell
+TBD
+```
+
+
+all command from xco will take the current dir as reference, 
+
+
 
 ## Installation
 

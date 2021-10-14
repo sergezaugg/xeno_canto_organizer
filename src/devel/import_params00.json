@@ -1,6 +1,7 @@
 {
 "min_duration_s" : 10,
 "max_duration_s" : 15,
+"quality" : ["A", "B"],
 "country" :[
     "Brazil", 
     "Bolivia"
