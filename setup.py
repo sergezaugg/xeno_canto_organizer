@@ -6,16 +6,25 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='xcorganizer',  
-    version='0.0.15',
-    scripts=['src/xco_download', 'src/xco_make_param'],
+    version='0.0.23',
+
+    py_modules=['xco_download', 'xco_make_param'],
+
+    entry_points={"console_scripts": [
+        "xco_download   = xco_download:main",
+        "xco_make_param = xco_make_param:main"
+        ]},
+
     author="Serge Zaugg",
     author_email="serge.zaugg@gmail.com",
     description="Python app to download and organize files from Xeno-Canto",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://gitlab.com/Serge_23/xeno_canto_organizer",
+
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
+
     python_requires=">=3.8",
     classifiers=[
         "Programming Language :: Python :: 3",
