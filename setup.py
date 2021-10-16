@@ -7,13 +7,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setuptools.setup(
 
     name='xcorganizer',
-      
-    version='0.0.24',
+
+    version='0.0.26',
 
     py_modules=['xco'],
 
     entry_points={"console_scripts": [
-        "xco_download   = xco:xco_download",
+        "xco_get   = xco:xco_get",
         "xco_make_param = xco:xco_make_param"
         ]},
 

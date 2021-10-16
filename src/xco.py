@@ -26,17 +26,18 @@ def convsec(x):
 
 
 
+# evalutes to False in interactive mode and True in script mode 
+import __main__ as main_module
+cli_call = hasattr(main_module, '__file__')
+if cli_call:
+    start_path = os.getcwd() # get dir from which script was called 
+else: # devel 
+    start_path = '/home/serge/sz_main/ml/data/xc_spec_03' 
+
+print('execute in module --- ')
+
 # main function to download mp3 from XC, or just get a summary
-def xco_download():
-
-    # evalutes to False in interactive mode and True in script mode 
-    import __main__ as main_module
-    cli_call = hasattr(main_module, '__file__')
-
-    if cli_call:
-        start_path = os.getcwd() # get dir from which script was called 
-    else: # devel 
-        start_path = '/home/serge/sz_main/ml/data/xc_spec_03' 
+def xco_get():
 
     main_download_path = os.path.join(start_path, 'downloads')
 
@@ -55,7 +56,7 @@ def xco_download():
         params_json = args.params_json
         params_download = args.download
     else: # devel 
-        params_json = "dparam00.json"
+        params_json = "example.json"
         params_download = False
         print(params_json)
         print(params_download)
@@ -66,8 +67,9 @@ def xco_download():
     with open(os.path.join(start_path, params_json)) as f:
         dl_params = json.load(f)
 
-    bird_species = dl_params['species']
    
+
+
 
     if params_download:
         # Create time-stamped directory where files will be downloaded
@@ -80,7 +82,7 @@ def xco_download():
         with open(os.path.join(source_path, params_json), 'w') as fp:
             json.dump(dl_params, fp,  indent=4)
     else:
-        print("retrieving info from xc ...")
+        print("Retrieving info from xc ...")
 
 
 
@@ -103,13 +105,12 @@ def xco_download():
             recs = [a for a in recs if convsec(a["length"]) > dl_params['min_duration_s'] and convsec(a["length"]) <= dl_params['max_duration_s']]
             
             # excude files with no-derivative licenses
-            recs = [a for a in recs if not 'nd' in a['lic']]
-            recs = [a for a in recs if not 'ND' in a['lic']]
+            if dl_params['exclude_nd']:
+                recs = [a for a in recs if not 'nd' in a['lic'].lower()]
 
             # select based on quality rating of recordings
             recs = [a for a in recs if a['q'] in dl_params['quality']]
 
-            len(recs)
 
 
 
@@ -139,7 +140,7 @@ def xco_download():
                     re_i['file_new_stem'] = finam2
 
             # get meta-data as df from jsom 
-            [a.pop('sono') for a in recs]
+            _ = [a.pop('sono') for a in recs]
             df = pd.DataFrame(recs)
             df_all = df_all.append(df)
 
@@ -156,16 +157,12 @@ def xco_download():
         print('Files to be downloaded:')    
 
     df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
-    print(pd.crosstab(df_all['full_spec_name'], df_all['cnt'], margins=True))
+    print(pd.crosstab(df_all['full_spec_name'], df_all['cnt'], margins=True, dropna=False))
     print("")
-    print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True))
+    print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True, dropna=False))
     print("")
-
-
-
-
-
-
+    print(df_all['lic'].value_counts())
+    print("")
 
 
 
@@ -179,28 +176,24 @@ def xco_download():
 
 def xco_make_param():
 
-    # evalutes to False in interactive mode and True in script mode 
-    import __main__ as main_module
-    cli_call = hasattr(main_module, '__file__')
-    if cli_call:
-        start_path = os.getcwd() # get dir from which script was called 
-    else: # devel 
-        start_path = '/home/serge/sz_main/ml/data/xc_spec_03' 
-
     dl_params = {
-        "min_duration_s" : 10,
+        "min_duration_s" : 5,
         "max_duration_s" : 15,
         "quality" : ["A", "B"],
+        "exclude_nd" : True,
         "country" :[
-            "Brazil", 
-            "Bolivia"
+            # "Japan", 
+            "Switzerland",
+            "Mexico",
+            "Australia"
             ],      
         "species" :[
-            "Attila bolivianus", 
-            "Amazona festiva", 
-            "Taraba major" 
+            "Corvus corax", 
+            # "Corvus macrorhynchos",
+            "Corvus sinaloae",
+            "Corvus coronoides"
             ]
         }
 
-    with open(os.path.join(start_path, 'dparam00.json'), 'w') as fp:
+    with open(os.path.join(start_path, 'example.json'), 'w') as fp:
         json.dump(dl_params, fp,  indent=4)

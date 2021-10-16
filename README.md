@@ -6,7 +6,7 @@ But the data cannot be directly used in ML processes (feature extraction, train 
 This tool set allows to easily download and organise XC data in a local repository that can be directly accesd by your ML processes.  
 
 ## Summary
-- check summaries before download 
+- check summaries before download (e.g. typos in species name, licences)
 - incremetaly download more and more data 
 - lightweigh meta-data format easy to postprocess with python
 - explicit selection of duration and licence
@@ -17,7 +17,7 @@ This tool set allows to easily download and organise XC data in a local reposito
 
 - recomendation: Make a Python venv first 
 
-- Linux
+- Linux or Windows Powershell
 ```bash
 # Make a empty directory where all your files and meta-data will be stored
 mkdir xc_all_downloads 
@@ -26,19 +26,15 @@ cd xc_all_downloads
 # create a template json parameter file
 xco_make_param 
 # get summary of what would be downloaded
-xco_download dparam00.json
+xco_get dparam00.json
 # download the mp3 files and the metadata
-xco_download dparam00.json -d
+xco_get dparam00.json -d
 # a time stamped directory was created and all file downloaded into it
 ```
 
-- Windows Powershell
-```Powershell
-TBD
-```
 
 
-all command from xco will take the current dir as reference, 
+all command from xco will take the current dir as reference
 
 
 
@@ -82,4 +78,34 @@ Use the following general guidelines when rating recordings on xeno-canto. Ratin
     C: Moderately clear, or quite some interference
     D: Faint recording, or much interference
     E: Barely audible
+
+
+
+
+
+
+
+
+ND clause (No Derivative) 
+
+
+Attribution
+CC BY
+
+Attribution-ShareAlike
+CC BY-SA 
+
+Attribution-NoDerivs
+CC BY-ND 
+
+Attribution-NonCommercial
+CC BY-NC 
+
+Attribution-NonCommercial-ShareAlike
+CC BY-NC-SA 
+
+Attribution-NonCommercial-NoDerivs
+CC BY-NC-ND 
+
+
 
