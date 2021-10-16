@@ -16,16 +16,21 @@ import argparse
 # constant parameters
 XC_API_URL = 'https://www.xeno-canto.org/api/2/recordings'
 
+# helper functions 
+def convsec(x):
+    """Convert 'mm:ss' (str) to seconds (int)"""
+    x = x.split(':')
+    x = int(x[0])*60 + int(x[1])
+    return(x)
 
 
-def main():
 
-    print("yep I am here!")
 
+# main function to download mp3 from XC, or just get a summary
+def xco_download():
 
     # evalutes to False in interactive mode and True in script mode 
     import __main__ as main_module
-
     cli_call = hasattr(main_module, '__file__')
 
     if cli_call:
@@ -50,26 +55,19 @@ def main():
         params_json = args.params_json
         params_download = args.download
     else: # devel 
-        params_json = "import_params01.json"
+        params_json = "dparam00.json"
         params_download = False
         print(params_json)
         print(params_download)
 
-    # helper 
-    def convsec(x):
-        x = x.split(':')
-        x = int(x[0])*60 + int(x[1])
-        return(x)
+ 
 
     # load parameters from json file 
     with open(os.path.join(start_path, params_json)) as f:
         dl_params = json.load(f)
 
     bird_species = dl_params['species']
-    dl_params['min_duration_s']
-    dl_params['max_duration_s']
-    dl_params['country']
-    dl_params['quality']
+   
 
     if params_download:
         # Create time-stamped directory where files will be downloaded
@@ -77,7 +75,7 @@ def main():
         source_path = os.path.join(main_download_path, timstamp)
         if not os.path.exists(source_path):
             os.mkdir(source_path)
-        print("retrieving info from xc and downloading ...")    
+        print("Retrieving info from xc and downloading ...")    
         # make a copy of parameter file
         with open(os.path.join(source_path, params_json), 'w') as fp:
             json.dump(dl_params, fp,  indent=4)
@@ -163,3 +161,46 @@ def main():
     print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True))
     print("")
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def xco_make_param():
+
+    # evalutes to False in interactive mode and True in script mode 
+    import __main__ as main_module
+    cli_call = hasattr(main_module, '__file__')
+    if cli_call:
+        start_path = os.getcwd() # get dir from which script was called 
+    else: # devel 
+        start_path = '/home/serge/sz_main/ml/data/xc_spec_03' 
+
+    dl_params = {
+        "min_duration_s" : 10,
+        "max_duration_s" : 15,
+        "quality" : ["A", "B"],
+        "country" :[
+            "Brazil", 
+            "Bolivia"
+            ],      
+        "species" :[
+            "Attila bolivianus", 
+            "Amazona festiva", 
+            "Taraba major" 
+            ]
+        }
+
+    with open(os.path.join(start_path, 'dparam00.json'), 'w') as fp:
+        json.dump(dl_params, fp,  indent=4)

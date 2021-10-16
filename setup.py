@@ -5,14 +5,16 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='xcorganizer',  
-    version='0.0.23',
 
-    py_modules=['xco_download', 'xco_make_param'],
+    name='xcorganizer',
+      
+    version='0.0.24',
+
+    py_modules=['xco'],
 
     entry_points={"console_scripts": [
-        "xco_download   = xco_download:main",
-        "xco_make_param = xco_make_param:main"
+        "xco_download   = xco:xco_download",
+        "xco_make_param = xco:xco_make_param"
         ]},
 
     author="Serge Zaugg",
