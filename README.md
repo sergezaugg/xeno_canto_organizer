@@ -1,9 +1,12 @@
 # xcorganize
 **A python-based command line tool to download and organize Xeno-Canto audio files for machine learning projects.**
 
-Xeno canto is a data treasure.
-But the data cannot be directly used in ML processes (feature extraction, train test) it first need to be organized.
-This tool set allows to easily download and organise XC data in a local repository that can be directly accesd by your ML processes.  
+Xeno-Canto* is a data treasure. But the data cannot be directly used in machine learning processes (feature extraction, train, test) because it first need to be organized. This toolset allows to download and organise XC data in a structured repository tree that can be directly accesd by your ML processes. 
+The tool is meant for incrementally adding consistently with previously used data. 
+
+
+*`https://www.xeno-canto.org/`
+
 
 ## Summary
 - check summaries before download (e.g. typos in species name, licences)
@@ -26,10 +29,15 @@ cd xc_all_downloads
 # create a template json parameter file
 xco_make_param 
 # get summary of what would be downloaded
-xco_get dparam00.json
+xco_get example.json
 # download the mp3 files and the metadata
-xco_get dparam00.json -d
+xco_get example.json -d
 # a time stamped directory was created and all file downloaded into it
+
+# convert to wav and adjust sampling rate (wrapper to ffmpeg)
+xco_m2w -ar 48000
+ 
+
 ```
 
 
