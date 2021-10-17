@@ -36,7 +36,8 @@ xco_get example.json -d
 
 # convert to wav and adjust sampling rate (wrapper to ffmpeg)
 xco_m2w -ar 48000
- 
+# add noise to wavs for a specific sampling rate 
+xco_add_noise -ar 48000 -n 0.20
 
 ```
 

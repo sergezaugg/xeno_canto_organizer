@@ -4,7 +4,6 @@ Created 20211010
 """
 
 import os
-# import sys
 import re
 import json
 import requests
@@ -15,7 +14,6 @@ import argparse
 
 import subprocess
 import numpy as np 
-# import librosa
 import soundfile as sf
 
 
@@ -32,6 +30,17 @@ def convsec(x):
     x = int(x[0])*60 + int(x[1])
     return(x)
 
+def add_noise(painp, paout, noize_fac = 0.1):
+    """Load a wav file, add noise and save as wav"""
+    assert(painp != paout), "painp and paout cannot be the same!"
+    # load wav
+    data, fs = sf.read(painp)
+    # add noize 
+    noiz_std = noize_fac*data.std()
+    noiz = np.random.normal(loc=0.0, scale=noiz_std, size=data.shape[0])
+    data = data + noiz
+    # Write   
+    sf.write(paout, data, fs)
 
 
 
@@ -63,7 +72,7 @@ def xco_get():
         params_download = args.download
     else: # devel 
         params_json = "example.json"
-        params_download = False
+        params_download = True
         print(params_json)
         print(params_download)
 
@@ -79,8 +88,8 @@ def xco_get():
 
     if params_download:
         # Create time-stamped directory where files will be downloaded
-        timstamp = 'download_' + datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
-        source_path = os.path.join(main_download_path, timstamp)
+        timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
+        source_path = os.path.join(main_download_path, timstamp + '_orig')
         if not os.path.exists(source_path):
             os.mkdir(source_path)
         print("Retrieving info from xc and downloading ...")    
@@ -191,17 +200,18 @@ def xco_m2w():
         args = parser.parse_args()
         params_fs = args.samplingrate
     else: # devel 
-        params_fs = 24000
+        params_fs = 48000
         print(params_fs)
 
     # get list of all dirs inside './downloads/'
     all_d_dirs = next(os.walk(os.path.join(start_path, 'downloads')))[1]
+    all_d_dirs = [a for a in all_d_dirs if '_orig' in a]
 
     for pa in all_d_dirs:
         # process_path should contain mp3s, a wav_fs_ subdir will be created inside 
         process_path = os.path.join(start_path, 'downloads', pa) 
 
-        destin_path = os.path.join(process_path, 'wav' + '_fs_' + str(params_fs) )
+        destin_path = process_path.replace('_orig','') + '_wav' + '_fs_' + str(params_fs) 
         if not os.path.exists(destin_path):
             os.mkdir(destin_path)
 
@@ -217,20 +227,16 @@ def xco_m2w():
                 # convert mp3 to wav by call to ffmpeg
                 try:
                     subprocess.call(['ffmpeg', 
-                        '-y', # overwrite 
-                        '-i', patin, 
-                        '-ar', str(params_fs), 
-                        '-ac', '1', # stereo to mono, take left channel
+                        '-y', # -y overwrite without asking 
+                        '-i', patin, # '-i' # infile must be specifitd after -i
+                        '-ar', str(params_fs), # -ar rate set audio sampling rate (in Hz)
+                        '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
                         paout
                         ])
                 except:
                     print("An exception occured!")
 
 
-# 'ffmpeg', 
-# '-i' # infile must be specifitd after -i
-# -ar rate            set audio sampling rate (in Hz)
-# -ac channels        set number of audio channels
 
 
 
@@ -238,35 +244,61 @@ def xco_m2w():
 
 
 
-# <<<<<<<<<<<<<<<<
-# paaa = '/home/serge/sz_main/ml/data/xc_spec_03/downloads/download_20211016T222727/wav_fs_24000/Corvus_corax_XC439091_180810_1082_Aubrac_grand_corbeau.wav'
-# data, fs = sf.read(paaa)
-# data.shape
+
+
+
 
 #-----------------
 # make some noize 
 
+def xco_add_noise():
+    """   
+    Take all wav files with a given sampling rate and add acontrolled amount of white noise.
+    """
 
-def add_noise(fi, painp, paout, noize_fac = 0.1):
-    """Load a wav file, add noise and save as wav"""
-    assert(painp != paout), "painp and paout cannot be the same!"
-    # load wav
-    data, fs = sf.read(os.path.join(painp, fi))
-    # add noize 
-    noiz_std = noize_fac*data.std()
-    noiz = np.random.normal(loc=0.0, scale=noiz_std, size=data.shape[0])
-    data = data + noiz
-    # Write   
-    sf.write(os.path.join(paout, fi), data, fs)
+    # parse CLI arguments
+    if cli_call:
+        parser = argparse.ArgumentParser(description='')
+        parser.add_argument('-n', '--noise', type=float , help='Required, float between 0.0 and +inf, percent of noise to add')
+        parser.add_argument('-ar', '--samplingrate', type=int , help='Required, sampling rate of files to be noised (int)')
+        args = parser.parse_args()
+        params_noize = args.noise
+        params_fs = args.samplingrate
+    else: # devel 
+        params_noize = 0.99
+        params_fs = 48000
+
+    # get list of all relevant dirs inside './downloads/'
+    all_d_dirs = next(os.walk(os.path.join(start_path, 'downloads')))[1]
+    all_d_dirs = [a for a in all_d_dirs if '_wav_fs_' in a]
+    all_d_dirs = [a for a in all_d_dirs if str(params_fs) in a]
+
+    for pa in all_d_dirs:
+        # process_path should contain mp3s, a wav_fs_ subdir will be created inside 
+        process_path = os.path.join(start_path, 'downloads', pa) 
+
+        destin_path = process_path.replace('_wav','_noise') + '_n_' + str(params_noize) 
+        if not os.path.exists(destin_path):
+            os.mkdir(destin_path)
+
+        all_wavs = [a for a in os.listdir(process_path) if '.wav' in a]
+
+        for finam in all_wavs:
+            patin = os.path.join(process_path, finam)
+            paout = os.path.join(destin_path, finam)
+
+            # only convert if wav file does not yet exist 
+            if not os.path.exists(paout):
+                try:
+                    add_noise(patin, paout, noize_fac = params_noize)
+                except:
+                    print("An exception occured!")
 
 
 
-if False: 
-    all_wavs = os.listdir(destin_path)
-    all_wavs = [a for a in all_wavs if '.wav' in a]
-    for finam in all_wavs:
-        print(destin_path + finam)
-        add_noise(finam, destin_path, destin_path_noiz, noize_fac = 0.05)
+
+
+
 
 
 
