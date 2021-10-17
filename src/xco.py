@@ -17,9 +17,6 @@ import numpy as np
 import soundfile as sf
 
 
-
-
-
 # constant parameters
 XC_API_URL = 'https://www.xeno-canto.org/api/2/recordings'
 
@@ -61,7 +58,6 @@ def xco_get():
     if not os.path.exists(main_download_path):
         os.mkdir(main_download_path)
 
-
     # parse CLI arguments
     if cli_call:
         parser = argparse.ArgumentParser(description='')
@@ -76,15 +72,9 @@ def xco_get():
         print(params_json)
         print(params_download)
 
- 
-
     # load parameters from json file 
     with open(os.path.join(start_path, params_json)) as f:
         dl_params = json.load(f)
-
-   
-
-
 
     if params_download:
         # Create time-stamped directory where files will be downloaded
@@ -98,9 +88,6 @@ def xco_get():
             json.dump(dl_params, fp,  indent=4)
     else:
         print("Retrieving info from xc ...")
-
-
-
 
     df_all = pd.DataFrame()
     for cnt in dl_params['country']:
@@ -125,10 +112,6 @@ def xco_get():
 
             # select based on quality rating of recordings
             recs = [a for a in recs if a['q'] in dl_params['quality']]
-
-
-
-
 
             # download 
             if params_download:
@@ -162,8 +145,6 @@ def xco_get():
     if params_download:
         df_all.to_csv(   os.path.join(main_download_path, timstamp + '_meta.csv') )
         df_all.to_pickle(os.path.join(main_download_path, timstamp + '_meta.pkl') )
-
-
 
     # print summary 
     if params_download:
@@ -200,7 +181,7 @@ def xco_m2w():
         args = parser.parse_args()
         params_fs = args.samplingrate
     else: # devel 
-        params_fs = 48000
+        params_fs = 33000
         print(params_fs)
 
     # get list of all dirs inside './downloads/'
@@ -211,7 +192,7 @@ def xco_m2w():
         # process_path should contain mp3s, a wav_fs_ subdir will be created inside 
         process_path = os.path.join(start_path, 'downloads', pa) 
 
-        destin_path = process_path.replace('_orig','') + '_wav' + '_fs_' + str(params_fs) 
+        destin_path = process_path.replace('_orig','') + '_wav_' + str(params_fs) + 'sps'
         if not os.path.exists(destin_path):
             os.mkdir(destin_path)
 
@@ -266,12 +247,12 @@ def xco_add_noise():
         params_fs = args.samplingrate
     else: # devel 
         params_noize = 0.99
-        params_fs = 48000
+        params_fs = 33000
 
     # get list of all relevant dirs inside './downloads/'
     all_d_dirs = next(os.walk(os.path.join(start_path, 'downloads')))[1]
-    all_d_dirs = [a for a in all_d_dirs if '_wav_fs_' in a]
-    all_d_dirs = [a for a in all_d_dirs if str(params_fs) in a]
+    all_d_dirs = [a for a in all_d_dirs if '_wav_' in a]
+    all_d_dirs = [a for a in all_d_dirs if str(params_fs) + 'sps' in a]
 
     for pa in all_d_dirs:
         # process_path should contain mp3s, a wav_fs_ subdir will be created inside 

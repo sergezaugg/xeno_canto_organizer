@@ -22,22 +22,27 @@ The tool is meant for incrementally adding consistently with previously used dat
 
 - Linux or Windows Powershell
 ```bash
-# Make a empty directory where all your files and meta-data will be stored
+
+# Make a root directory where files and meta-data will be stored
 mkdir xc_all_downloads 
-# cd into it
+
+# cd into it (all command should be calld forom the root dir)
 cd xc_all_downloads
-# create a template json parameter file
+
+# create a example json parameter file, and edit it if you want.
 xco_make_param 
+
 # get summary of what would be downloaded
 xco_get example.json
-# download the mp3 files and the metadata
-xco_get example.json -d
-# a time stamped directory was created and all file downloaded into it
 
-# convert to wav and adjust sampling rate (wrapper to ffmpeg)
+# add the -d flag to download mp3 files into a timestamped directory and store the metadata with the same timestamp
+xco_get example.json -d
+
+# convert mp3s to wav with a specific sampling rate (wrapper to ffmpeg)
 xco_m2w -ar 48000
+
 # add noise to wavs for a specific sampling rate 
-xco_add_noise -ar 48000 -n 0.20
+xco_add_noise -ar 48000 -n 0.10
 
 ```
 
