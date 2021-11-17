@@ -90,7 +90,6 @@ def xco_get():
         cnt_str = '+cnt:' + cnt
         for ke in dl_params['species']:        
             search_str = ke.replace(' ', '+') 
-            tag = search_str.replace('+','_') + '_'
             # API HTTP request of meta data 
             full_query_string = XC_API_URL + '?query=' + search_str + cnt_str
             r = requests.get(full_query_string, allow_redirects=True)
@@ -143,6 +142,7 @@ def xco_get():
                 finam2 = unidecode.unidecode(finam2)
                 finam2 = finam2.replace(' ', '_').replace('-', '_')
                 finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
+                tag =  re_i['gen'] + "_" + re_i['sp'] + '_'
                 finam2 = tag + finam2
                 # write file to disc
                 open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
