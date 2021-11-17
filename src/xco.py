@@ -11,7 +11,6 @@ import pandas as pd
 import unidecode
 import datetime 
 import argparse
-
 import subprocess
 import numpy as np 
 import soundfile as sf
@@ -47,7 +46,22 @@ cli_call = hasattr(main_module, '__file__')
 if cli_call:
     start_path = os.getcwd() # get dir from which script was called 
 else: # devel 
-    start_path = '/home/serge/sz_main/ml/data/xc_spec_03' 
+    # start_path = '/home/serge/sz_main/ml/data/xc_spec_03' 
+    start_path = 'C:/Users/Zase/Desktop/data_spec/xc_all_downloads' 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # main function to download mp3 from XC, or just get a summary
@@ -57,6 +71,13 @@ def xco_get():
 
     if not os.path.exists(main_download_path):
         os.mkdir(main_download_path)
+
+    # get all metadata from already downloaded files 
+    pkls_li = [a for a  in os.listdir(main_download_path) if a.endswith('_meta.pkl')]
+    df_meta = []
+    if len(pkls_li) > 0:
+        df_meta = pd.concat( [pd.read_pickle(os.path.join(main_download_path,a)) for a in pkls_li] )
+        df_meta = df_meta['id'].tolist()
 
     # parse CLI arguments
     if cli_call:
@@ -76,89 +97,104 @@ def xco_get():
     with open(os.path.join(start_path, params_json)) as f:
         dl_params = json.load(f)
 
-    if params_download:
-        # Create time-stamped directory where files will be downloaded
-        timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
-        source_path = os.path.join(main_download_path, timstamp + '_orig')
-        if not os.path.exists(source_path):
-            os.mkdir(source_path)
-        print("Retrieving info from xc and downloading ...")    
-        # make a copy of parameter file
-        with open(os.path.join(main_download_path, timstamp + '_params.json'), 'w') as fp:
-            json.dump(dl_params, fp,  indent=4)
-    else:
-        print("Retrieving info from xc ...")
 
-    df_all = pd.DataFrame()
+
+    # retrieve meta data from XC web and select candidate files to be downloaded 
+    print("Retrieving meta-data from xc and apply selection filters ...")
+    n_excl = 0
+    recs_pool = []
     for cnt in dl_params['country']:
         cnt_str = '+cnt:' + cnt
-
         for ke in dl_params['species']:        
             search_str = ke.replace(' ', '+') 
             tag = search_str.replace('+','_') + '_'
-            
+            # API HTTP request of meta data 
             full_query_string = XC_API_URL + '?query=' + search_str + cnt_str
             r = requests.get(full_query_string, allow_redirects=True)
-
             j = r.json()
             recs = j['recordings']
-
-            # exclude if length no in specified range 
+            # exclude if length not in specified range 
             recs = [a for a in recs if convsec(a["length"]) > dl_params['min_duration_s'] and convsec(a["length"]) <= dl_params['max_duration_s']]
-            
-            # excude files with no-derivative licenses
+            # exclude files with no-derivative licenses
             if dl_params['exclude_nd']:
                 recs = [a for a in recs if not 'nd' in a['lic'].lower()]
-
             # select based on quality rating of recordings
             recs = [a for a in recs if a['q'] in dl_params['quality']]
-
-            # download 
-            if params_download:
-                for re_i in recs:
-                    # print(len(re_i["also"]))
-                    re_i["also"] = ' + '.join(re_i["also"])
-                    # print(re_i["file"])
-                    length_s = convsec(re_i["length"])
-
-                    full_download_string = 'http:' + re_i["file"]
-
-                    r = requests.get(full_download_string, allow_redirects=True)
-
-                    # simplify filename stem 
-                    finam2 = re_i["file-name"].replace('.mp3', '')
-                    finam2 = unidecode.unidecode(finam2)
-                    finam2 = finam2.replace(' ', '_').replace('-', '_')
-                    finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
-                    finam2 = tag + finam2
-
-                    open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
-
-                    # keep track of simplified name
-                    re_i['file_new_stem'] = finam2
-
+            # exclude recordings that were already downloaded             
+            before_exclusion = len(recs)
+            recs = [a for a in recs if a['id'] not in df_meta]
+            n_excluded = before_exclusion - len(recs)
+            n_excl += n_excluded
             # get meta-data as df from jsom 
             _ = [a.pop('sono') for a in recs]
-            df = pd.DataFrame(recs)
-            df_all = df_all.append(df)
+            recs_pool.extend(recs)
 
-    if params_download:
-        df_all.to_csv(   os.path.join(main_download_path, timstamp + '_meta.csv') )
-        df_all.to_pickle(os.path.join(main_download_path, timstamp + '_meta.pkl') )
-
-    # print summary 
-    if params_download:
-        print('Files that were downloaded:')
+    # final handling
+    if len(recs_pool) <= 0:
+        print("There are 0 (zero) files left after applying the data selection")
     else:
-        print('Files to be downloaded:')    
+        df_all = pd.DataFrame(recs_pool)
+        print("There are " + str(df_all.shape[0]) + " files left after applying the data selection")
+        print(n_excl, 'files available locally, they are not downloaded again.')
+        if params_download:
+            # Create time-stamped directory where files will be downloaded
+            timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
+            source_path = os.path.join(main_download_path, timstamp + '_orig')
+            if not os.path.exists(source_path):
+                os.mkdir(source_path)
+            print("Retrieving info from xc and downloading ...") 
 
-    df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
-    print(pd.crosstab(df_all['full_spec_name'], df_all['cnt'], margins=True, dropna=False))
-    print("")
-    print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True, dropna=False))
-    print("")
-    print(df_all['lic'].value_counts())
-    print("")
+            # make a copy of parameter file and meta information
+            with open(os.path.join(main_download_path, timstamp + '_params.json'), 'w') as fp:
+                json.dump(dl_params, fp,  indent=4)
+            df_all.to_csv(   os.path.join(main_download_path, timstamp + '_meta.csv') )
+            df_all.to_pickle(os.path.join(main_download_path, timstamp + '_meta.pkl') )
+
+            # download 
+            for re_i in recs_pool:
+                re_i["also"] = ' + '.join(re_i["also"])
+                full_download_string = 'http:' + re_i["file"]
+                # actually download files 
+                r = requests.get(full_download_string, allow_redirects=True)
+                # simplify filename stem 
+                finam2 = re_i["file-name"].replace('.mp3', '')
+                finam2 = unidecode.unidecode(finam2)
+                finam2 = finam2.replace(' ', '_').replace('-', '_')
+                finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
+                finam2 = tag + finam2
+                # write file to disc
+                open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
+                # keep track of simplified name
+                re_i['file_new_stem'] = finam2
+
+        else:
+            print(n_excl, 'files available locally, they will not be downloaded again.')
+
+        print("")
+        print("Details:")
+        df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
+        print(pd.crosstab(df_all['full_spec_name'], df_all['cnt'], margins=True, dropna=False))
+        print("")
+        print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True, dropna=False))
+        print("")
+        print(df_all['lic'].value_counts())
+        print("")
+
+ 
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
 
 
 
