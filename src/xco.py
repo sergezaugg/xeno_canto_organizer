@@ -38,8 +38,6 @@ def add_noise(painp, paout, noize_fac = 0.1):
     # Write   
     sf.write(paout, data, fs)
 
-
-
 # evalutes to False in interactive mode and True in script mode 
 import __main__ as main_module
 cli_call = hasattr(main_module, '__file__')
@@ -48,21 +46,6 @@ if cli_call:
 else: # devel 
     # start_path = '/home/serge/sz_main/ml/data/xc_spec_03' 
     start_path = 'C:/Users/Zase/Desktop/data_spec/xc_all_downloads' 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # main function to download mp3 from XC, or just get a summary
 def xco_get():
@@ -90,8 +73,6 @@ def xco_get():
     else: # devel 
         params_json = "example.json"
         params_download = True
-        print(params_json)
-        print(params_download)
 
     # load parameters from json file 
     with open(os.path.join(start_path, params_json)) as f:
@@ -99,7 +80,9 @@ def xco_get():
 
 
 
-    # retrieve meta data from XC web and select candidate files to be downloaded 
+    # retrieve meta data from XC web and select candidate files to be downloaded
+    print("") 
+    print("*******************************") 
     print("Retrieving meta-data from xc and apply selection filters ...")
     n_excl = 0
     recs_pool = []
@@ -130,27 +113,26 @@ def xco_get():
             recs_pool.extend(recs)
 
     # final handling
-    if len(recs_pool) <= 0:
-        print("There are 0 (zero) files left after applying the data selection")
-    else:
+    print(n_excl, 'of the selected files available locally ...')
+    if (n_excl>0): print( "... they will not be downloaded again")
+    print("There are " + str(len(recs_pool)) + " files for download after applying the selection filters")
+    
+    if len(recs_pool) > 0:
         df_all = pd.DataFrame(recs_pool)
-        print("There are " + str(df_all.shape[0]) + " files left after applying the data selection")
-        print(n_excl, 'files available locally, they are not downloaded again.')
         if params_download:
+            print("Writing meta-information to pkl ...") 
             # Create time-stamped directory where files will be downloaded
             timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
             source_path = os.path.join(main_download_path, timstamp + '_orig')
             if not os.path.exists(source_path):
                 os.mkdir(source_path)
-            print("Retrieving info from xc and downloading ...") 
-
             # make a copy of parameter file and meta information
             with open(os.path.join(main_download_path, timstamp + '_params.json'), 'w') as fp:
                 json.dump(dl_params, fp,  indent=4)
             df_all.to_csv(   os.path.join(main_download_path, timstamp + '_meta.csv') )
             df_all.to_pickle(os.path.join(main_download_path, timstamp + '_meta.pkl') )
-
             # download 
+            print("Downloading wav files ...")
             for re_i in recs_pool:
                 re_i["also"] = ' + '.join(re_i["also"])
                 full_download_string = 'http:' + re_i["file"]
@@ -167,9 +149,6 @@ def xco_get():
                 # keep track of simplified name
                 re_i['file_new_stem'] = finam2
 
-        else:
-            print(n_excl, 'files available locally, they will not be downloaded again.')
-
         print("")
         print("Details:")
         df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
@@ -178,7 +157,9 @@ def xco_get():
         print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True, dropna=False))
         print("")
         print(df_all['lic'].value_counts())
-        print("")
+
+    print("*******************************") 
+    print("") 
 
  
 
