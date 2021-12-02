@@ -38,6 +38,10 @@ def add_noise(painp, paout, noize_fac = 0.1):
     # Write   
     sf.write(paout, data, fs)
 
+
+
+
+
 # evalutes to False in interactive mode and True in script mode 
 import __main__ as main_module
 cli_call = hasattr(main_module, '__file__')
@@ -45,7 +49,17 @@ if cli_call:
     start_path = os.getcwd() # get dir from which script was called 
 else: # devel 
     # start_path = '/home/serge/sz_main/ml/data/xc_spec_03' 
-    start_path = 'C:/Users/Zase/Desktop/data_spec/xc_all_downloads' 
+    # start_path = 'C:/Users/Zase/Desktop/data_spec/xc_all_downloads' 
+    start_path = '/home/serge/sz_main/ml/data/xc_dev'
+
+
+
+
+
+
+
+
+
 
 # main function to download mp3 from XC, or just get a summary
 def xco_get():
@@ -71,7 +85,7 @@ def xco_get():
         params_json = args.params_json
         params_download = args.download
     else: # devel 
-        params_json = "example.json"
+        params_json = "d.json" # "example.json"
         params_download = True
 
     # load parameters from json file 
@@ -109,7 +123,21 @@ def xco_get():
             n_excl += n_excluded
             # get meta-data as df from jsom 
             _ = [a.pop('sono') for a in recs]
+
+            # replace "";"" by empty string in all values (needed for later export as csv)
+            if len(recs) > 0:
+                for l in range(len(recs)):
+                    # print(recs[l]['rmk'])
+                    recs[l]["also"] = ' + '.join(recs[l]["also"])
+                    for k in recs[l].keys():
+                        recs[l][k] = recs[l][k].replace(';', '')
+                    # print(recs[l]['rmk'])
+
             recs_pool.extend(recs)
+
+         
+
+        # recs_pool[6]['rmk']
 
     # final handling
     print(n_excl, 'of the selected files available locally ...')
@@ -128,12 +156,11 @@ def xco_get():
             # make a copy of parameter file and meta information
             with open(os.path.join(main_download_path, timstamp + '_params.json'), 'w') as fp:
                 json.dump(dl_params, fp,  indent=4)
-            df_all.to_csv(   os.path.join(main_download_path, timstamp + '_meta.csv') )
-            df_all.to_pickle(os.path.join(main_download_path, timstamp + '_meta.pkl') )
+ 
             # download 
             print("Downloading wav files ...")
             for re_i in recs_pool:
-                re_i["also"] = ' + '.join(re_i["also"])
+                # re_i["also"] = ' + '.join(re_i["also"])
                 full_download_string = 'http:' + re_i["file"]
                 # actually download files 
                 r = requests.get(full_download_string, allow_redirects=True)
@@ -147,8 +174,13 @@ def xco_get():
                 # write file to disc
                 open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
                 # keep track of simplified name
-                re_i['file_new_stem'] = finam2
-
+                re_i['downloaded_to_path'] = source_path
+                re_i['downloaded_to_file_stem'] = finam2
+            df_all_extended = pd.DataFrame(recs_pool)
+            df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
+            df_all_extended.to_csv(   os.path.join(main_download_path, timstamp + '_meta.csv') )
+            df_all_extended.to_pickle(os.path.join(main_download_path, timstamp + '_meta.pkl') )
+            
         print("")
         print("Details:")
         df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
@@ -334,3 +366,46 @@ def xco_make_param():
 
     with open(os.path.join(start_path, 'example.json'), 'w') as f:
         json.dump(dl_params, f,  indent=4)
+
+
+
+
+
+
+
+
+
+
+
+def xco_summary():
+    # import all pkl with an append all dfs and export as csv
+    main_download_path = os.path.join(start_path, 'downloads')
+
+    all_pkls = [a for a in os.listdir(main_download_path) if '_meta.pkl' in a]
+
+    df_summary = pd.DataFrame()
+    for a in all_pkls:
+        df_summary = df_summary.append(pd.read_pickle(os.path.join(main_download_path, a))) 
+
+    df_summary.sort_values(by=['gen','sp','cnt','q'], axis=0, ascending=True, inplace=True, ignore_index=True)
+
+    # check if full path points to an existing file 
+    all_files = df_summary['downloaded_to_path'] + '/' + df_summary['downloaded_to_file_stem'] + '.mp3'
+    df_summary['file_exists']  = [os.path.exists(p) for p in all_files]
+    # save as csv 
+    timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
+    df_summary.to_csv(   os.path.join(start_path, 'summary_' + timstamp + '.csv') )
+
+    # make per-species aggregated summaries 
+    df_summary['length_sec'] =  df_summary['length'].apply(convsec) # get total length
+    df01 = pd.crosstab(df_summary['full_spec_name'], df_summary['cnt'], margins=True, dropna=False)
+    df02 = pd.crosstab(df_summary['full_spec_name'], df_summary['q'], margins=True, dropna=False)
+    df03 = pd.DataFrame(df_summary.groupby('full_spec_name')['length_sec'].sum())
+    # merge 
+    df_summa = df01
+    df_summa = df_summa.merge(df02, how = "outer", on = ['full_spec_name'])
+    df_summa = df_summa.merge(df03, how = "outer", on = ['full_spec_name'])
+    df_summa.reset_index(inplace=True)
+    # save to disc
+    df_summa.to_csv(os.path.join(start_path, 'summary_agg_' + timstamp + '.csv') )
+

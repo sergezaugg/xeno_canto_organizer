@@ -6,13 +6,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='xcorganizer',
-    version='0.0.37',
+    version='0.0.38',
     py_modules=['xco'],
     entry_points={"console_scripts": [
         "xco_get   = xco:xco_get",
         "xco_make_param = xco:xco_make_param",
         "xco_m2w = xco:xco_m2w",
-        "xco_add_noise = xco:xco_add_noise"
+        "xco_add_noise = xco:xco_add_noise",
+        "xco_summary = xco:xco_summary"
         ]},
     author="Serge Zaugg",
     author_email="serge.zaugg@gmail.com",
