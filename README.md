@@ -38,6 +38,9 @@ xco_get example.json
 # add the -d flag to download mp3 files into a timestamped directory and store the metadata with the same timestamp
 xco_get example.json -d
 
+# get summary table of all mp3 files 
+xco_summary
+
 # convert mp3s to wav with a specific sampling rate (wrapper to ffmpeg)
 xco_m2w -ar 48000
 
