@@ -15,6 +15,18 @@ import subprocess
 import numpy as np 
 import soundfile as sf
 
+import wave
+import pickle
+import scipy.signal as sgn 
+import librosa  
+import matplotlib.pyplot as plt  
+
+# import own functions                    
+from fex import funReadWavSegment, extract_dnn_input
+
+
+
+
 
 
 
@@ -316,8 +328,264 @@ class XCO():
 
 
 
+# <<<<<<<<<<<<<<<<<<<<<<<<
+
+    def extract_spectrograms(self, summary_file):
+
+        self.start_path = '/home/serge/sz_main/ml/data/xc_dev'
+
+        # get df with file meta info 
+        df_all = pd.read_csv(self.start_path + '/' + summary_file)
 
 
+        # place where extracted features will be saved:
+        feature_extraction_dir = self.start_path + '/fex/'
+        if not os.path.exists(feature_extraction_dir):
+            os.mkdir(feature_extraction_dir)
+
+        #--------------------------------
+        # parameters 
+        # keep hardcoded - should not be changed
+        seg_step_size = 1.0 # only 1.0 works! for now     
+        # duration of a segment in seconds:
+        duratSec = 10
+        # which meta_info_ids to use from CAR-DB:
+        meta_info_id_list = self.start_path
+        # keep only meta_info_ids that have this fs defined in DB:
+        target_sampl_freq = 48000
+        # how many frequency bins to use in final arrays:
+        n_mel_filters = 128
+        # include only labels that fall within these bounds:
+        # FE_freq_bands = [100, 5000]
+        # FFT window size
+        win_siz = 2048
+        # FFT window overlap
+        win_olap = 1113
+        
+        
+   
+
+
+        # construct list of full path to relevant wav files 
+        path_li = [a.replace('_orig', '_noise_48000sps_n_0.05') + '/' for a in df_all['downloaded_to_path'].tolist()]
+        file_li = [a + '.wav' for a in df_all['downloaded_to_file_stem'].tolist()]
+        path_and_file_zipped = zip(path_li, file_li)
+        allWavFileNames = [a[0] + a[1] for a in path_and_file_zipped]
+        sel = [os.path.exists(p) for p in allWavFileNames]
+
+
+        df_all['allWavFileNames'] = allWavFileNames
+
+        # exclude non available files from df 
+        # all_wavs_available = os.listdir(car_wave_files_dir)
+        # all_wavs_available = [a.replace('.wav', '') for a in all_wavs_available]
+        # sel = df_all['file_new_stem'].isin(all_wavs_available)
+        # df_all = df_all.loc[sel,:]
+        df_all = df_all.loc[sel,:]
+        df_all.shape
+
+
+
+        # map to original sound-types like in CAR 
+        sound_type_mapping_dict = { 
+            'Amazona festiva' : 'festive_amazon_call',
+            'Attila bolivianus' : 'dull_capped_attila_song',
+            'Cacicus cela' : 's000040',
+            'Capito aurovirens' : 's000015',
+            'Crotophaga major' : 's000031',
+            'Crypturellus undulatus' : 'undulated_tinamou_song',
+            'Glaucidium brasilianum' : 's000014',
+            'Leptotila rufaxilla' : 'grayfronted_dove_song',
+            'Monasa nigrifrons' : 'black_fronted_nunbird_song',
+            'Myrmelastes hyperythrus' : 's000010',
+            'Nasica longirostris' : 'updownsweep_2kHz_dur1s_01',
+            'Nyctibius grandis' : 's000003',
+            'Nyctibius griseus' : 's000021',
+            'Pitangus sulphuratus' : 's000038',
+            'Psarocolius angustifrons' : 's000020',
+            'Ramphastos tucanus' : 's000025',
+            'Taraba major' : 's000022',
+            'Trogon melanurus' : 's000016',
+            'Xiphorhynchus guttatus' : 's000011',
+            'Xiphorhynchus obsoletus' : 's000023',
+            }
+
+        def map_to_sound_type(spec_name):
+            return(sound_type_mapping_dict[spec_name])
+
+        # map_to_sound_type('Leptotila rufaxilla')
+        # df_all['sound_type'] = df_all['full_spec_name'].apply(map_to_sound_type)
+        # temp 
+        df_all['sound_type'] = df_all['full_spec_name']
+        print(df_all['sound_type'] .value_counts())
+
+        # extract info
+        target_sounds = np.unique(np.array(df_all['sound_type']))
+        n_targ_sounds = target_sounds.shape[0]
+        
+
+        
+
+    
+        
+        # generate a new instance of trained_model_dir
+        time_stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        feature_extraction_dir_b = feature_extraction_dir + "features_" + time_stamp + "/"
+        if (not os.path.isdir(feature_extraction_dir_b)):
+            os.mkdir(feature_extraction_dir_b)    
+        
+        
+        
+        
+        #::::::::::::::::::::::::::::::::::::::
+        # pre compute stuff 
+        N = duratSec * target_sampl_freq
+        sig = np.random.normal(size=N)
+        sig.shape
+        
+        X_freq, X_time, Xtemp = sgn.spectrogram(x = sig, 
+            fs = target_sampl_freq, 
+            window = 'hamming', 
+            nperseg = win_siz, 
+            noverlap = win_olap, 
+            detrend = 'constant', 
+            return_onesided = True, 
+            scaling = 'spectrum', 
+            mode = 'psd')
+        
+        X_freq.shape
+        X_time.shape
+        #::::::::::::::::::::::::::::::::::::::
+        
+        
+        
+        # select target frequencies
+        # sel_freqs = np.logical_and(X_freq >= FE_freq_bands[0], X_freq <= FE_freq_bands[1])
+        
+        # to be saved with file 
+        time_bins = X_time
+        
+        print('time_bins.shape:', time_bins.shape)
+        
+        # # compute final size of freq axe (after selectin freqs and downsampling)
+        # Xtemp = Xtemp[sel_freqs,:]
+        # Xtemp = Xtemp.transpose()
+        
+        mel_basis = librosa.filters.mel(sr = target_sampl_freq, n_fft= win_siz, n_mels=n_mel_filters)
+        print('mel_basis.shape', mel_basis.shape)
+        n_f_bins_1 = mel_basis.shape[0]
+        
+        # assess MEL visually 
+        if False:
+            _ = plt.plot(mel_basis.T)
+        
+        
+        
+            
+        
+     
+
+        target_class_id = pd.Series(['none'])
+        
+        
+        
+        
+        
+        # main loop ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::  
+    
+        fileNameToSave = feature_extraction_dir_b + "dnn_fex_site_" + '_XC_' + ".pkl"
+
+        # prepare loop over all wav files
+        def get_wav_file_duration(wavFileName):
+            waveFile = wave.open(wavFileName, 'r')
+            myFs = waveFile.getframerate()
+            totNsam = waveFile.getnframes()
+            totDurFile_s = totNsam / myFs
+            waveFile.close()
+            return(totDurFile_s)
+        
+        # get duration of each file
+        file_durs = np.array([get_wav_file_duration(x) for x in allWavFileNames])
+        # get nb segment for each file
+        nb_segments_per_file = file_durs // duratSec
+        tot_nb_segments = int(nb_segments_per_file.sum())
+        
+        # initialize empty array
+        X = -1 + np.zeros(shape = (tot_nb_segments, X_time.shape[0], n_f_bins_1) , dtype = 'float32'  )
+        #    seg_id = np.zeros(shape = (tot_nb_segments) , dtype = 'float16'  )
+        # generte labels 
+        y_seq = np.zeros(shape = (tot_nb_segments, X_time.shape[0], n_targ_sounds) , dtype = 'int8'  )
+    
+        # initialize iterator for segments
+        i_seg = 0  
+        
+        # loop over all wav files 
+        for r in  df_all.iterrows():  
+            # get full path to wav file             
+            wavFileName = r[1]['allWavFileNames']    # car_wave_files_dir + r[1]['file_new_stem'] + '.wav'
+            
+            # get label index
+            lab_index_bool = target_sounds == r[1]['sound_type']
+            
+            # open wav file and get meta-information 
+            waveFile = wave.open(wavFileName, 'r')
+            myFs = waveFile.getframerate()
+            totNsam = waveFile.getnframes()
+            totDurFile_s = totNsam / myFs
+            nchannels = waveFile.getnchannels()    
+            sampwidth = waveFile.getsampwidth()
+            waveFile.close()
+            
+            # make sure fs is correct 
+            if myFs != target_sampl_freq:
+                print("myFs not equal to target_sampl_freq !!!")
+                continue
+            
+            totNbSegments = int(totDurFile_s / duratSec)
+
+            # loop over segments within file     
+            for ii in  np.arange(0, (totNbSegments - 0.99), seg_step_size)   :
+                print(ii)
+
+                # FEX :::::::::::::::::::::::::::::::
+                # read .wav file 
+                startSec = ii*duratSec
+                sig = funReadWavSegment(f = wavFileName, startSec = startSec, duratSec = duratSec, fs = myFs, nChann = nchannels, sampwidth = sampwidth)
+                
+                # NEW FEX function  
+                X_fex = extract_dnn_input(sig, myFs, win_siz, win_olap, mel_basis).squeeze()
+                X[i_seg,:,:] = X_fex
+                # END FEX :::::::::::::::::::::::::::::::
+
+                # AGGIGN labels to whole segment
+                y_seq[i_seg,:,:][:,lab_index_bool] = 1
+            
+                # increment iterator 
+                i_seg += 1
+            
+
+        # organize detection parameters for later storage to file 
+        detection_param = {
+            'meta_info_id' : 'unused',
+            'target_sampl_freq' : target_sampl_freq,
+            'duratSec' : duratSec, 
+            'seg_step_size' : seg_step_size,
+            'win_siz' : win_siz, 
+            'win_olap' : win_olap,
+            'time_bins' : time_bins,
+            'wave_files_source_path' : meta_info_id_list,
+            # new 
+            'mel_scaling' : 'not_used_anymore',
+            'n_mel_filters' : n_mel_filters,
+            'mel_basis' : mel_basis,
+            'target_sounds' : target_sounds,
+            'target_class_id' : target_class_id,
+            }
+
+        # save 
+        allObjects = [X, y_seq, "unused", "unused", target_sounds, detection_param]
+        pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
+    
 
 
 
