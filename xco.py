@@ -7,10 +7,10 @@ import os
 import re
 import json
 import requests
+
 import pandas as pd
 import unidecode
 import datetime 
-# import argparse
 import subprocess
 import numpy as np 
 import soundfile as sf
@@ -25,13 +25,13 @@ class XCO():
         self.start_path = '/home/serge/sz_main/ml/data/xc_dev'
 
     # helper functions 
-    def convsec(self, x):
+    def __convsec(self, x):
         """Convert 'mm:ss' (str) to seconds (int)"""
         x = x.split(':')
         x = int(x[0])*60 + int(x[1])
         return(x)
 
-    def add_noise(self, painp, paout, noize_fac = 0.1):
+    def __add_some_noise(self, painp, paout, noize_fac = 0.1):
         """Load a wav file, add noise and save as wav"""
         assert(painp != paout), "painp and paout cannot be the same!"
         # load wav
@@ -44,7 +44,7 @@ class XCO():
         sf.write(paout, data, fs)
 
 
-    def xco_make_param(self):
+    def make_param(self):
         """  """
         dl_params = {
             "min_duration_s" : 5,
@@ -67,7 +67,7 @@ class XCO():
             json.dump(dl_params, f,  indent=4)
 
 
-    def xco_summary(self):
+    def summary(self):
         # import all pkl with an append all dfs and export as csv
         main_download_path = os.path.join(self.start_path, 'downloads')
 
@@ -87,7 +87,7 @@ class XCO():
         df_summary.to_csv(   os.path.join(self.start_path, 'summary_' + timstamp + '.csv') )
 
         # make per-species aggregated summaries 
-        df_summary['length_sec'] =  df_summary['length'].apply(self.convsec) # get total length
+        df_summary['length_sec'] =  df_summary['length'].apply(self.__convsec) # get total length
         df01 = pd.crosstab(df_summary['full_spec_name'], df_summary['cnt'], margins=True, dropna=False)
         df02 = pd.crosstab(df_summary['full_spec_name'], df_summary['q'], margins=True, dropna=False)
         df03 = pd.DataFrame(df_summary.groupby('full_spec_name')['length_sec'].sum())
@@ -104,7 +104,7 @@ class XCO():
 
 
     # main function to download mp3 from XC, or just get a summary
-    def xco_get(self, params_json, params_download = False):
+    def get(self, params_json, params_download = False):
 
         main_download_path = os.path.join(self.start_path, 'downloads')
 
@@ -142,7 +142,7 @@ class XCO():
                 j = r.json()
                 recs = j['recordings']
                 # exclude if length not in specified range 
-                recs = [a for a in recs if self.convsec(a["length"]) > dl_params['min_duration_s'] and self.convsec(a["length"]) <= dl_params['max_duration_s']]
+                recs = [a for a in recs if self.__convsec(a["length"]) > dl_params['min_duration_s'] and self.__convsec(a["length"]) <= dl_params['max_duration_s']]
                 # exclude files with no-derivative licenses
                 if dl_params['exclude_nd']:
                     recs = [a for a in recs if not 'nd' in a['lic'].lower()]
@@ -228,7 +228,7 @@ class XCO():
 
 
 
-    def xco_m2w(self, params_fs = 48000):
+    def m2w(self, params_fs = 48000):
         """   
         Convert mp3 to wav, this is a wrapper around ffmpeg.
         Looks for files ending in .mp3 throught all dirs inside ./downloads/ 
@@ -283,7 +283,7 @@ class XCO():
     #-----------------
     # make some noize 
 
-    def xco_add_noise(self, params_fs, params_noize):
+    def add_noise(self, params_fs, params_noize):
         """   
         Take all wav files with a given sampling rate and add acontrolled amount of white noise.
         """
@@ -310,7 +310,7 @@ class XCO():
                 # only convert if wav file does not yet exist 
                 if not os.path.exists(paout):
                     try:
-                        self.add_noise(patin, paout, noize_fac = params_noize)
+                        self.__add_some_noise(patin, paout, noize_fac = params_noize)
                     except:
                         print("An exception occured!")
 
