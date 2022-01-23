@@ -25,7 +25,7 @@ xco.extract_spectrograms(summary_file = 'summary_20220123T172840.csv', dir_tag =
 # prepare for labeling (This will overwrite labels !!!)
 xco.labelling_prepare_arrays(fina = 'spectro_20220123_172920.pkl') 
 # do the labelling 
-xco.labelling_interactive(fina = 'spectro_20220123_172920_timlab.pkl', relabel_thld = 2)
+xco.labelling_interactive(fina = 'spectro_20220123_172920_timlab.pkl', relabel_thld = 0)
 
 
 

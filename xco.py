@@ -577,7 +577,11 @@ class XCO():
         # save / overwrite  
         fileNameToSave = os.path.join(fext_dir , fina.replace('.pkl', '') + '_timlab' + '.pkl')
         allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
-        pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
+
+        if os.path.isfile(fileNameToSave):
+            print('File already exists and will not be overwritten! (' + fileNameToSave + ')')
+        else:
+            pickle.dump(allObjects, open( fileNameToSave, "wb"))
 
 
 
@@ -658,7 +662,7 @@ class XCO():
                 n_label_runs[i] += 1
         
                 # save / overwrite  
-                fileNameToSave = fext_dir + fina
+                fileNameToSave = os.path.join(fext_dir , fina)
                 allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
                 pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
 
