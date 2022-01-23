@@ -32,9 +32,9 @@ from fex import funReadWavSegment, extract_dnn_input
 
 class XCO():
 
-    def __init__(self):
+    def __init__(self, start_path):
         self.XC_API_URL = 'https://www.xeno-canto.org/api/2/recordings'
-        self.start_path = '/home/serge/sz_main/ml/data/xc_dev'
+        self.start_path = start_path # '/home/serge/sz_main/ml/data/xc_dev'
 
     # helper functions 
     def __convsec(self, x):
@@ -240,7 +240,7 @@ class XCO():
 
 
 
-    def m2w(self, params_fs = 48000):
+    def mp3_to_wav(self, params_fs = 48000):
         """   
         Convert mp3 to wav, this is a wrapper around ffmpeg.
         Looks for files ending in .mp3 throught all dirs inside ./downloads/ 
@@ -330,9 +330,9 @@ class XCO():
 
 # <<<<<<<<<<<<<<<<<<<<<<<<
 
-    def extract_spectrograms(self, summary_file):
+    def extract_spectrograms(self, summary_file, dir_tag):
 
-        self.start_path = '/home/serge/sz_main/ml/data/xc_dev'
+        # self.start_path = '/home/serge/sz_main/ml/data/xc_dev'
 
         # get df with file meta info 
         df_all = pd.read_csv(self.start_path + '/' + summary_file)
@@ -346,7 +346,7 @@ class XCO():
         #--------------------------------
         # parameters 
         # keep hardcoded - should not be changed
-        seg_step_size = 1.0 # only 1.0 works! for now     
+        seg_step_size = 1.0 
         # duration of a segment in seconds:
         duratSec = 10
         # which meta_info_ids to use from CAR-DB:
@@ -355,8 +355,6 @@ class XCO():
         target_sampl_freq = 48000
         # how many frequency bins to use in final arrays:
         n_mel_filters = 128
-        # include only labels that fall within these bounds:
-        # FE_freq_bands = [100, 5000]
         # FFT window size
         win_siz = 2048
         # FFT window overlap
@@ -367,53 +365,21 @@ class XCO():
 
 
         # construct list of full path to relevant wav files 
-        path_li = [a.replace('_orig', '_noise_48000sps_n_0.05') + '/' for a in df_all['downloaded_to_path'].tolist()]
+        path_li = [a.replace('_orig', dir_tag) + '/' for a in df_all['downloaded_to_path'].tolist()]
         file_li = [a + '.wav' for a in df_all['downloaded_to_file_stem'].tolist()]
         path_and_file_zipped = zip(path_li, file_li)
         allWavFileNames = [a[0] + a[1] for a in path_and_file_zipped]
         sel = [os.path.exists(p) for p in allWavFileNames]
 
-
         df_all['allWavFileNames'] = allWavFileNames
 
         # exclude non available files from df 
-        # all_wavs_available = os.listdir(car_wave_files_dir)
-        # all_wavs_available = [a.replace('.wav', '') for a in all_wavs_available]
-        # sel = df_all['file_new_stem'].isin(all_wavs_available)
-        # df_all = df_all.loc[sel,:]
         df_all = df_all.loc[sel,:]
         df_all.shape
 
 
 
-        # map to original sound-types like in CAR 
-        sound_type_mapping_dict = { 
-            'Amazona festiva' : 'festive_amazon_call',
-            'Attila bolivianus' : 'dull_capped_attila_song',
-            'Cacicus cela' : 's000040',
-            'Capito aurovirens' : 's000015',
-            'Crotophaga major' : 's000031',
-            'Crypturellus undulatus' : 'undulated_tinamou_song',
-            'Glaucidium brasilianum' : 's000014',
-            'Leptotila rufaxilla' : 'grayfronted_dove_song',
-            'Monasa nigrifrons' : 'black_fronted_nunbird_song',
-            'Myrmelastes hyperythrus' : 's000010',
-            'Nasica longirostris' : 'updownsweep_2kHz_dur1s_01',
-            'Nyctibius grandis' : 's000003',
-            'Nyctibius griseus' : 's000021',
-            'Pitangus sulphuratus' : 's000038',
-            'Psarocolius angustifrons' : 's000020',
-            'Ramphastos tucanus' : 's000025',
-            'Taraba major' : 's000022',
-            'Trogon melanurus' : 's000016',
-            'Xiphorhynchus guttatus' : 's000011',
-            'Xiphorhynchus obsoletus' : 's000023',
-            }
-
-        def map_to_sound_type(spec_name):
-            return(sound_type_mapping_dict[spec_name])
-
-        # map_to_sound_type('Leptotila rufaxilla')
+        # map_to_sound_type
         # df_all['sound_type'] = df_all['full_spec_name'].apply(map_to_sound_type)
         # temp 
         df_all['sound_type'] = df_all['full_spec_name']
@@ -430,9 +396,10 @@ class XCO():
         
         # generate a new instance of trained_model_dir
         time_stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        feature_extraction_dir_b = feature_extraction_dir + "features_" + time_stamp + "/"
-        if (not os.path.isdir(feature_extraction_dir_b)):
-            os.mkdir(feature_extraction_dir_b)    
+
+        # feature_extraction_dir_b = feature_extraction_dir + "features_" + "/"
+        # if (not os.path.isdir(feature_extraction_dir_b)):
+        #     os.mkdir(feature_extraction_dir_b)    
         
         
         
@@ -458,18 +425,10 @@ class XCO():
         #::::::::::::::::::::::::::::::::::::::
         
         
-        
-        # select target frequencies
-        # sel_freqs = np.logical_and(X_freq >= FE_freq_bands[0], X_freq <= FE_freq_bands[1])
-        
         # to be saved with file 
         time_bins = X_time
         
         print('time_bins.shape:', time_bins.shape)
-        
-        # # compute final size of freq axe (after selectin freqs and downsampling)
-        # Xtemp = Xtemp[sel_freqs,:]
-        # Xtemp = Xtemp.transpose()
         
         mel_basis = librosa.filters.mel(sr = target_sampl_freq, n_fft= win_siz, n_mels=n_mel_filters)
         print('mel_basis.shape', mel_basis.shape)
@@ -493,7 +452,7 @@ class XCO():
         
         # main loop ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::  
     
-        fileNameToSave = feature_extraction_dir_b + "dnn_fex_site_" + '_XC_' + ".pkl"
+        fileNameToSave =  feature_extraction_dir + "spectro_" + time_stamp + ".pkl"
 
         # prepare loop over all wav files
         def get_wav_file_duration(wavFileName):
