@@ -21,6 +21,9 @@ import scipy.signal as sgn
 import librosa  
 import matplotlib.pyplot as plt  
 
+
+
+
 # import own functions                    
 from fex import funReadWavSegment, extract_dnn_input
 
@@ -553,6 +556,115 @@ class XCO():
         allObjects = [X, y_seq, y_str, "unused", target_sounds, detection_param]
         pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
     
+
+
+
+
+    # LABELLING 
+
+    def labelling_prepare_arrays(self, fina):
+
+        fext_dir = os.path.join(self.start_path, 'fex')  # '/home/serge/sz_main/ml/data/xc_dev/fex/'
+        # fina = 'spectro_20220123_172920.pkl'
+
+        # load data first time 
+        (X_tra, Y_tra, y_str, _, labs, fex) = pickle.load( open( os.path.join(fext_dir , fina), "rb" ) ) 
+        X_tra = X_tra.astype('float32')
+        X_tra = np.expand_dims(X_tra, 3)
+        n_label_runs = np.zeros(X_tra.shape[0], dtype='int')
+        Y_tra[:] = 0
+
+        # save / overwrite  
+        fileNameToSave = os.path.join(fext_dir , fina.replace('.pkl', '') + '_timlab' + '.pkl')
+        allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
+        pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
+
+
+
+
+    def labelling_interactive(self, fina, relabel_thld = 3):
+        """
+        Instructions
+        left button:    select a time point
+        middle boutton: go to next segment
+        right boutton:  remove last point
+        """
+
+        fext_dir = os.path.join(self.start_path, 'fex')  
+
+        (X_tra, Y_tra, y_str, _, labs, fex, n_label_runs) = pickle.load( open( os.path.join(fext_dir , fina), "rb" ) ) 
+
+        # check
+        print('X_tra.shape', X_tra.shape)    
+        print('Y_tra.shape', Y_tra.shape)
+        print('labs.shape', labs.shape)
+        print('n_label_runs.shape', n_label_runs.shape)
+        print(n_label_runs)
+
+        for i in np.arange(0, X_tra.shape[0],1):
+            print(i)
+            # only label if already labelled less or equal than relabel_thld
+            if n_label_runs[i] <= relabel_thld:
+
+                # sel_label = Y_tra[i].sum(0) >= 1
+                curr_label = y_str[i]  #labs[sel_label][0]
+                
+                # get nummerical indes of current sound-type
+                st_num_index = np.where(labs == curr_label)[0].item()
+
+                # get stuff already labelled 
+                pre_availabel_labels = Y_tra[i,:,st_num_index]
+
+                # loop while figure is open 
+                redo = True # to re-show same spectro if uneven nb points 
+                while redo:
+                    print('i', i)
+
+                    fig, (ax0, ax1) = plt.subplots(2, 1, gridspec_kw={'height_ratios': [4, 1]} )
+                    ax0.imshow(X_tra[i].squeeze().T, aspect = 'auto')
+                    ax0.set_title( 'i: ' + str(i) + '    ' + curr_label)   
+                    ax1.plot(pre_availabel_labels)
+                    ax1.set_xlim([0, pre_availabel_labels.shape[0]])
+                    
+                    # get interactive point 
+                    cur_vals = plt.ginput(n=-1, timeout=0)
+
+                
+                    # check that nb points is even
+                    cur_vals = [a[0] for a in cur_vals]
+                    if len(cur_vals)%2 == 0:
+                        redo = False
+                    else:
+                        print('Error nb point must be even!')
+                    plt.close()
+                
+                # update the actual label array 
+                la = np.array(cur_vals)
+                la.sort() # sort in-place 
+                la = la.reshape((la.shape[0]//2,2))
+                la = la.round().astype(int)
+                
+                pos_lab_index = []
+                for r in la:
+                    pos_lab_index.extend(np.arange(r[0],r[1]).tolist())
+                pos_lab_index = np.array(pos_lab_index)
+
+                all_int_inices = np.arange(Y_tra[i].shape[0])
+                # get boolean index
+                ind_set_to_one = np.isin(element = all_int_inices, test_elements = pos_lab_index)
+                # and set the shit to 1 where it has to 
+                # Y_tra[i][ind_set_to_one,:][:,st_num_index] = 1
+                Y_tra[i,:,st_num_index][ind_set_to_one] = 1
+                n_label_runs[i] += 1
+        
+                # save / overwrite  
+                fileNameToSave = fext_dir + fina
+                allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
+                pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
+
+                # if i > 1:
+                #     break
+
 
 
 
