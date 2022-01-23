@@ -474,6 +474,8 @@ class XCO():
         #    seg_id = np.zeros(shape = (tot_nb_segments) , dtype = 'float16'  )
         # generte labels 
         y_seq = np.zeros(shape = (tot_nb_segments, X_time.shape[0], n_targ_sounds) , dtype = 'int8'  )
+
+        y_str = []
     
         # initialize iterator for segments
         i_seg = 0  
@@ -518,6 +520,9 @@ class XCO():
 
                 # AGGIGN labels to whole segment
                 y_seq[i_seg,:,:][:,lab_index_bool] = 1
+
+                # keep track of file's primary species
+                y_str.append(r[1]['sound_type'])
             
                 # increment iterator 
                 i_seg += 1
@@ -541,8 +546,11 @@ class XCO():
             'target_class_id' : target_class_id,
             }
 
+
+        y_str = np.array(y_str)
+
         # save 
-        allObjects = [X, y_seq, "unused", "unused", target_sounds, detection_param]
+        allObjects = [X, y_seq, y_str, "unused", target_sounds, detection_param]
         pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
     
 
