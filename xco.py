@@ -21,14 +21,8 @@ import scipy.signal as sgn
 import librosa  
 import matplotlib.pyplot as plt  
 
-
-
-
 # import own functions                    
-from fex import funReadWavSegment, extract_dnn_input
-
-
-
+from fexutils import read_piece_of_wav, extract_spectrogram
 
 
 
@@ -82,7 +76,7 @@ class XCO():
             json.dump(dl_params, f,  indent=4)
 
 
-    def summary(self):
+    def summary(self, save_csv = True):
         # import all pkl with an append all dfs and export as csv
         main_download_path = os.path.join(self.start_path, 'downloads')
 
@@ -99,7 +93,7 @@ class XCO():
         df_summary['file_exists']  = [os.path.exists(p) for p in all_files]
         # save as csv 
         timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
-        df_summary.to_csv(   os.path.join(self.start_path, 'summary_' + timstamp + '.csv') )
+    
 
         # make per-species aggregated summaries 
         df_summary['length_sec'] =  df_summary['length'].apply(self.__convsec) # get total length
@@ -112,8 +106,11 @@ class XCO():
         df_summa = df_summa.merge(df03, how = "outer", on = ['full_spec_name'])
         df_summa.reset_index(inplace=True)
         # save to disc
-        df_summa.to_csv(os.path.join(self.start_path, 'summary_agg_' + timstamp + '.csv') )
-
+        if save_csv:
+            df_summa.to_csv(os.path.join(self.start_path, 'summary_agg_' + timstamp + '.csv') )
+            df_summary.to_csv(   os.path.join(self.start_path, 'summary_' + timstamp + '.csv') )
+        else:
+            return(df_summary)
 
 
 
@@ -331,15 +328,10 @@ class XCO():
 
 
 
-# <<<<<<<<<<<<<<<<<<<<<<<<
-
-    def extract_spectrograms(self, summary_file, dir_tag):
-
-        # self.start_path = '/home/serge/sz_main/ml/data/xc_dev'
+    def extract_spectrograms(self, dir_tag, map_sound_type_dic = None):
 
         # get df with file meta info 
-        df_all = pd.read_csv(self.start_path + '/' + summary_file)
-
+        df_all = self.summary(save_csv = False)
 
         # place where extracted features will be saved:
         feature_extraction_dir = self.start_path + '/fex/'
@@ -364,16 +356,12 @@ class XCO():
         win_olap = 1113
         
         
-   
-
-
         # construct list of full path to relevant wav files 
         path_li = [a.replace('_orig', dir_tag) + '/' for a in df_all['downloaded_to_path'].tolist()]
         file_li = [a + '.wav' for a in df_all['downloaded_to_file_stem'].tolist()]
         path_and_file_zipped = zip(path_li, file_li)
         allWavFileNames = [a[0] + a[1] for a in path_and_file_zipped]
         sel = [os.path.exists(p) for p in allWavFileNames]
-
         df_all['allWavFileNames'] = allWavFileNames
 
         # exclude non available files from df 
@@ -382,10 +370,15 @@ class XCO():
 
 
 
-        # map_to_sound_type
-        # df_all['sound_type'] = df_all['full_spec_name'].apply(map_to_sound_type)
-        # temp 
-        df_all['sound_type'] = df_all['full_spec_name']
+        # facultatively map to new sound-type name
+        if map_sound_type_dic is None:
+            df_all['sound_type'] = df_all['full_spec_name']
+        else:
+            def map_to_sound_type(s):
+                return(map_sound_type_dic[s])
+            df_all['sound_type'] = df_all['full_spec_name'].apply(map_to_sound_type)
+
+
         print(df_all['sound_type'] .value_counts())
 
         # extract info
@@ -393,20 +386,9 @@ class XCO():
         n_targ_sounds = target_sounds.shape[0]
         
 
-        
 
-    
-        
-        # generate a new instance of trained_model_dir
-        time_stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        # feature_extraction_dir_b = feature_extraction_dir + "features_" + "/"
-        # if (not os.path.isdir(feature_extraction_dir_b)):
-        #     os.mkdir(feature_extraction_dir_b)    
-        
-        
-        
-        
+      
         #::::::::::::::::::::::::::::::::::::::
         # pre compute stuff 
         N = duratSec * target_sampl_freq
@@ -440,21 +422,14 @@ class XCO():
         # assess MEL visually 
         if False:
             _ = plt.plot(mel_basis.T)
-        
-        
-        
-            
-        
-     
+ 
 
         target_class_id = pd.Series(['none'])
         
-        
-        
-        
-        
+
         # main loop ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::  
-    
+
+        time_stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         fileNameToSave =  feature_extraction_dir + "spectro_" + time_stamp + ".pkl"
 
         # prepare loop over all wav files
@@ -511,15 +486,12 @@ class XCO():
             for ii in  np.arange(0, (totNbSegments - 0.99), seg_step_size)   :
                 print(ii)
 
-                # FEX :::::::::::::::::::::::::::::::
-                # read .wav file 
+                # FEX 
                 startSec = ii*duratSec
-                sig = funReadWavSegment(f = wavFileName, startSec = startSec, duratSec = duratSec, fs = myFs, nChann = nchannels, sampwidth = sampwidth)
-                
-                # NEW FEX function  
-                X_fex = extract_dnn_input(sig, myFs, win_siz, win_olap, mel_basis).squeeze()
+                sig = read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
+                X_fex = extract_spectrogram(sig, myFs, win_siz, win_olap, mel_basis).squeeze()
                 X[i_seg,:,:] = X_fex
-                # END FEX :::::::::::::::::::::::::::::::
+                # END FEX 
 
                 # AGGIGN labels to whole segment
                 y_seq[i_seg,:,:][:,lab_index_bool] = 1
@@ -564,8 +536,7 @@ class XCO():
 
     def labelling_prepare_arrays(self, fina):
 
-        fext_dir = os.path.join(self.start_path, 'fex')  # '/home/serge/sz_main/ml/data/xc_dev/fex/'
-        # fina = 'spectro_20220123_172920.pkl'
+        fext_dir = os.path.join(self.start_path, 'fex')  
 
         # load data first time 
         (X_tra, Y_tra, y_str, _, labs, fex) = pickle.load( open( os.path.join(fext_dir , fina), "rb" ) ) 
