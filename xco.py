@@ -7,19 +7,19 @@ import os
 import re
 import json
 import requests
-
 import pandas as pd
 import unidecode
 import datetime 
 import subprocess
 import numpy as np 
 import soundfile as sf
-
 import wave
 import pickle
 import scipy.signal as sgn 
-import librosa  
+# import librosa  
 import matplotlib.pyplot as plt  
+import numpy as np
+from PIL import Image
 
 # import own functions                    
 from fexutils import read_piece_of_wav, extract_spectrogram
@@ -299,39 +299,39 @@ class XCO():
 
 
 
-    #-----------------
-    # make some noize 
+    # #-----------------
+    # # make some noize 
 
-    def add_noise(self, params_fs, params_noize):
-        """   
-        Take all wav files with a given sampling rate and add acontrolled amount of white noise.
-        """
+    # def add_noise(self, params_fs, params_noize):
+    #     """   
+    #     Take all wav files with a given sampling rate and add acontrolled amount of white noise.
+    #     """
 
-        # get list of all relevant dirs inside './downloads/'
-        all_d_dirs = next(os.walk(os.path.join(self.start_path, 'downloads')))[1]
-        all_d_dirs = [a for a in all_d_dirs if '_wav_' in a]
-        all_d_dirs = [a for a in all_d_dirs if str(params_fs) + 'sps' in a]
+    #     # get list of all relevant dirs inside './downloads/'
+    #     all_d_dirs = next(os.walk(os.path.join(self.start_path, 'downloads')))[1]
+    #     all_d_dirs = [a for a in all_d_dirs if '_wav_' in a]
+    #     all_d_dirs = [a for a in all_d_dirs if str(params_fs) + 'sps' in a]
 
-        for pa in all_d_dirs:
-            # process_path should contain mp3s, a wav_fs_ subdir will be created inside 
-            process_path = os.path.join(self.start_path, 'downloads', pa) 
+    #     for pa in all_d_dirs:
+    #         # process_path should contain mp3s, a wav_fs_ subdir will be created inside 
+    #         process_path = os.path.join(self.start_path, 'downloads', pa) 
 
-            destin_path = process_path.replace('_wav','_noise') + '_n_' + str(params_noize) 
-            if not os.path.exists(destin_path):
-                os.mkdir(destin_path)
+    #         destin_path = process_path.replace('_wav','_noise') + '_n_' + str(params_noize) 
+    #         if not os.path.exists(destin_path):
+    #             os.mkdir(destin_path)
 
-            all_wavs = [a for a in os.listdir(process_path) if '.wav' in a]
+    #         all_wavs = [a for a in os.listdir(process_path) if '.wav' in a]
 
-            for finam in all_wavs:
-                patin = os.path.join(process_path, finam)
-                paout = os.path.join(destin_path, finam)
+    #         for finam in all_wavs:
+    #             patin = os.path.join(process_path, finam)
+    #             paout = os.path.join(destin_path, finam)
 
-                # only convert if wav file does not yet exist 
-                if not os.path.exists(paout):
-                    try:
-                        self.__add_some_noise(patin, paout, noize_fac = params_noize)
-                    except:
-                        print("An exception occured!")
+    #             # only convert if wav file does not yet exist 
+    #             if not os.path.exists(paout):
+    #                 try:
+    #                     self.__add_some_noise(patin, paout, noize_fac = params_noize)
+    #                 except:
+    #                     print("An exception occured!")
 
 
 
@@ -350,17 +350,17 @@ class XCO():
         # keep hardcoded - should not be changed
         seg_step_size = 1.0 
         # duration of a segment in seconds:
-        duratSec = 10
+        duratSec = 5
         # which meta_info_ids to use from CAR-DB:
         meta_info_id_list = self.start_path
         # keep only meta_info_ids that have this fs defined in DB:
-        target_sampl_freq = 48000
+        target_sampl_freq = 32000
         # how many frequency bins to use in final arrays:
         n_mel_filters = 128
         # FFT window size
-        win_siz = 2048
+        win_siz = 1024
         # FFT window overlap
-        win_olap = 1113
+        win_olap = 512+256
         
         
         # construct list of full path to relevant wav files 
@@ -422,14 +422,12 @@ class XCO():
         
         print('time_bins.shape:', time_bins.shape)
         
-        mel_basis = librosa.filters.mel(sr = target_sampl_freq, n_fft= win_siz, n_mels=n_mel_filters)
-        print('mel_basis.shape', mel_basis.shape)
-        n_f_bins_1 = mel_basis.shape[0]
+        # mel_basis = librosa.filters.mel(sr = target_sampl_freq, n_fft= win_siz, n_mels=n_mel_filters)
+        # print('mel_basis.shape', mel_basis.shape)
+        # n_f_bins_1 = mel_basis.shape[0]
+
+        n_f_bins_1 = X_freq.shape[0]
         
-        # assess MEL visually 
-        if False:
-            _ = plt.plot(mel_basis.T)
- 
 
         target_class_id = pd.Series(['none'])
         
@@ -468,7 +466,7 @@ class XCO():
         # loop over all wav files 
         for r in  df_all.iterrows():  
             # get full path to wav file             
-            wavFileName = r[1]['allWavFileNames']    # car_wave_files_dir + r[1]['file_new_stem'] + '.wav'
+            wavFileName = r[1]['allWavFileNames']    
             
             # get label index
             lab_index_bool = target_sounds == r[1]['sound_type']
@@ -496,22 +494,38 @@ class XCO():
                 # FEX 
                 startSec = ii*duratSec
                 sig = read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
-                X_fex = extract_spectrogram(sig, myFs, win_siz, win_olap, mel_basis).squeeze()
+                X_fex = extract_spectrogram(sig, myFs, win_siz, win_olap).squeeze()
 
                 print('X_fex.shape', X_fex.shape)
                 print('type(X_fex)', type(X_fex))
 
                 X[i_seg,:,:] = X_fex
+
+
+                # save image as PNG 
+                arr = X_fex.T
+                arr.shape
+                arr = np.flip(arr, axis=0)
+                # normalize 
+                arr = arr - arr.min()
+                arr = np.log(arr+1.0)
+                arr = arr/arr.max()
+                # Get the color map by name:                
+                map_val = 'inferno'
+                cm = plt.get_cmap(map_val)
+                # Apply the colormap like a function to any array:
+                colored_image = cm(arr)
+                im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
+                # save as image 
+                # im.save(os.path.join(xc.start_path, "test_image_dev_01.png"))
+                aaa_path = os.path.join(self.start_path, 'fex', os.path.basename(wavFileName) + str(ii)+ ".png")
+                print(self.start_path)
+                print("wavFileName", os.path.basename(wavFileName))
+                im.save(aaa_path)
+
                 # END FEX 
 
-                # # AGGIGN labels to whole segment
-                # y_seq[i_seg,:,:][:,lab_index_bool] = 1
-
-                # # keep track of file's primary species
-                # y_str.append(r[1]['sound_type'])
-            
-                # # increment iterator 
-                # i_seg += 1
+              
             
 
         # organize detection parameters for later storage to file 
@@ -527,7 +541,6 @@ class XCO():
             # new 
             'mel_scaling' : 'not_used_anymore',
             'n_mel_filters' : n_mel_filters,
-            'mel_basis' : mel_basis,
             'target_sounds' : target_sounds,
             'target_class_id' : target_class_id,
             }
@@ -535,122 +548,11 @@ class XCO():
 
         # y_str = np.array(y_str)
 
-        # save 
-        allObjects = [X, y_seq, y_str, "unused", target_sounds, detection_param]
-        pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
+        # # save 
+        # allObjects = [X, y_seq, y_str, "unused", target_sounds, detection_param]
+        # pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
         self.X = X
     
-
-
-
-
-    # # LABELLING 
-
-    # def labelling_prepare_arrays(self, fina):
-
-    #     fext_dir = os.path.join(self.start_path, 'fex')  
-
-    #     # load data first time 
-    #     (X_tra, Y_tra, y_str, _, labs, fex) = pickle.load( open( os.path.join(fext_dir , fina), "rb" ) ) 
-    #     X_tra = X_tra.astype('float32')
-    #     X_tra = np.expand_dims(X_tra, 3)
-    #     n_label_runs = np.zeros(X_tra.shape[0], dtype='int')
-    #     Y_tra[:] = 0
-
-    #     # save / overwrite  
-    #     fileNameToSave = os.path.join(fext_dir , fina.replace('.pkl', '') + '_timlab' + '.pkl')
-    #     allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
-
-    #     if os.path.isfile(fileNameToSave):
-    #         print('File already exists and will not be overwritten! (' + fileNameToSave + ')')
-    #     else:
-    #         pickle.dump(allObjects, open( fileNameToSave, "wb"))
-
-
-
-
-    # def labelling_interactive(self, fina, relabel_thld = 3):
-    #     """
-    #     Instructions
-    #     left button:    select a time point
-    #     middle boutton: go to next segment
-    #     right boutton:  remove last point
-    #     """
-
-    #     fext_dir = os.path.join(self.start_path, 'fex')  
-
-    #     (X_tra, Y_tra, y_str, _, labs, fex, n_label_runs) = pickle.load( open( os.path.join(fext_dir , fina), "rb" ) ) 
-
-    #     # check
-    #     print('X_tra.shape', X_tra.shape)    
-    #     print('Y_tra.shape', Y_tra.shape)
-    #     print('labs.shape', labs.shape)
-    #     print('n_label_runs.shape', n_label_runs.shape)
-    #     print(n_label_runs)
-
-    #     for i in np.arange(0, X_tra.shape[0],1):
-    #         print(i)
-    #         # only label if already labelled less or equal than relabel_thld
-    #         if n_label_runs[i] <= relabel_thld:
-
-    #             # sel_label = Y_tra[i].sum(0) >= 1
-    #             curr_label = y_str[i]  #labs[sel_label][0]
-                
-    #             # get nummerical indes of current sound-type
-    #             st_num_index = np.where(labs == curr_label)[0].item()
-
-    #             # get stuff already labelled 
-    #             pre_availabel_labels = Y_tra[i,:,st_num_index]
-
-    #             # loop while figure is open 
-    #             redo = True # to re-show same spectro if uneven nb points 
-    #             while redo:
-    #                 print('i', i)
-
-    #                 fig, (ax0, ax1) = plt.subplots(2, 1, gridspec_kw={'height_ratios': [4, 1]} )
-    #                 ax0.imshow(X_tra[i].squeeze().T, aspect = 'auto')
-    #                 ax0.set_title( 'i: ' + str(i) + '    ' + curr_label)   
-    #                 ax1.plot(pre_availabel_labels)
-    #                 ax1.set_xlim([0, pre_availabel_labels.shape[0]])
-                    
-    #                 # get interactive point 
-    #                 cur_vals = plt.ginput(n=-1, timeout=0)
-
-                
-    #                 # check that nb points is even
-    #                 cur_vals = [a[0] for a in cur_vals]
-    #                 if len(cur_vals)%2 == 0:
-    #                     redo = False
-    #                 else:
-    #                     print('Error nb point must be even!')
-    #                 plt.close()
-                
-    #             # update the actual label array 
-    #             la = np.array(cur_vals)
-    #             la.sort() # sort in-place 
-    #             la = la.reshape((la.shape[0]//2,2))
-    #             la = la.round().astype(int)
-                
-    #             pos_lab_index = []
-    #             for r in la:
-    #                 pos_lab_index.extend(np.arange(r[0],r[1]).tolist())
-    #             pos_lab_index = np.array(pos_lab_index)
-
-    #             all_int_inices = np.arange(Y_tra[i].shape[0])
-    #             # get boolean index
-    #             ind_set_to_one = np.isin(element = all_int_inices, test_elements = pos_lab_index)
-    #             # and set the shit to 1 where it has to 
-    #             # Y_tra[i][ind_set_to_one,:][:,st_num_index] = 1
-    #             Y_tra[i,:,st_num_index][ind_set_to_one] = 1
-    #             n_label_runs[i] += 1
-        
-    #             # save / overwrite  
-    #             fileNameToSave = os.path.join(fext_dir , fina)
-    #             allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
-    #             pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
-
-    #             # if i > 1:
-    #             #     break
 
 
 

@@ -34,7 +34,7 @@ def read_piece_of_wav(f, start_sec, durat_sec, fs, n_ch, sampwidth):
     return(sig)
 
 
-def extract_spectrogram(sig, fs, win_siz, win_olap, mel_basis):
+def extract_spectrogram(sig, fs, win_siz, win_olap):
     """
     transform waveform to mel spectrogram 
     """
@@ -60,7 +60,7 @@ def extract_spectrogram(sig, fs, win_siz, win_olap, mel_basis):
     mystftMea = np.broadcast_to(array = mystftMea, shape = (nTimeBins, nFreqBins))
     X = np.subtract(X, mystftMea)
     # mel
-    X = np.matmul(X, mel_basis.T )
+    # X = np.matmul(X, mel_basis.T )
     X = X.astype('float32') 
     # scale
     X = (X - X.mean()) / X.std()
