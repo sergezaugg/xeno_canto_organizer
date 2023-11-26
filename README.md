@@ -79,5 +79,17 @@ CC BY-NC-SA
 Attribution-NonCommercial-NoDerivs
 CC BY-NC-ND 
 
+pip install requests 
+pip install pandas
+pip install unidecode
+pip install numpy
+pip install soundfile
+pip install scipy
+pip install matplotlib
+pip install librosa
+
+
+
+
 
 

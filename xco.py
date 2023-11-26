@@ -82,10 +82,12 @@ class XCO():
 
         all_pkls = [a for a in os.listdir(main_download_path) if '_meta.pkl' in a]
 
-        df_summary = pd.DataFrame()
+        df_summ_li = []
         for a in all_pkls:
-            df_summary = df_summary.append(pd.read_pickle(os.path.join(main_download_path, a))) 
-
+            df_summ_li.append(pd.read_pickle(os.path.join(main_download_path, a))) 
+          
+            # print(len(df_summ_li))
+        df_summary = pd.concat(df_summ_li)
         df_summary.sort_values(by=['gen','sp','cnt','q'], axis=0, ascending=True, inplace=True, ignore_index=True)
 
         # check if full path points to an existing file 
@@ -94,7 +96,6 @@ class XCO():
         # save as csv 
         timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
     
-
         # make per-species aggregated summaries 
         df_summary['length_sec'] =  df_summary['length'].apply(self.__convsec) # get total length
         df01 = pd.crosstab(df_summary['full_spec_name'], df_summary['cnt'], margins=True, dropna=False)
@@ -169,12 +170,18 @@ class XCO():
                 _ = [a.pop('sono') for a in recs]
 
                 # replace "";"" by empty string in all values (needed for later export as csv)
+                # print(recs)
+                self.recs = recs
                 if len(recs) > 0:
                     for l in range(len(recs)):
                         # print(recs[l]['rmk'])
                         recs[l]["also"] = ' + '.join(recs[l]["also"])
                         for k in recs[l].keys():
-                            recs[l][k] = recs[l][k].replace(';', '')
+                            # print(recs[l][k])
+                            try:
+                                recs[l][k] = recs[l][k].replace(';', '')
+                            except:
+                                3+3
                         # print(recs[l]['rmk'])
 
                 recs_pool.extend(recs)
@@ -490,17 +497,21 @@ class XCO():
                 startSec = ii*duratSec
                 sig = read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
                 X_fex = extract_spectrogram(sig, myFs, win_siz, win_olap, mel_basis).squeeze()
+
+                print('X_fex.shape', X_fex.shape)
+                print('type(X_fex)', type(X_fex))
+
                 X[i_seg,:,:] = X_fex
                 # END FEX 
 
-                # AGGIGN labels to whole segment
-                y_seq[i_seg,:,:][:,lab_index_bool] = 1
+                # # AGGIGN labels to whole segment
+                # y_seq[i_seg,:,:][:,lab_index_bool] = 1
 
-                # keep track of file's primary species
-                y_str.append(r[1]['sound_type'])
+                # # keep track of file's primary species
+                # y_str.append(r[1]['sound_type'])
             
-                # increment iterator 
-                i_seg += 1
+                # # increment iterator 
+                # i_seg += 1
             
 
         # organize detection parameters for later storage to file 
@@ -522,123 +533,124 @@ class XCO():
             }
 
 
-        y_str = np.array(y_str)
+        # y_str = np.array(y_str)
 
         # save 
         allObjects = [X, y_seq, y_str, "unused", target_sounds, detection_param]
         pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
+        self.X = X
     
 
 
 
 
-    # LABELLING 
+    # # LABELLING 
 
-    def labelling_prepare_arrays(self, fina):
+    # def labelling_prepare_arrays(self, fina):
 
-        fext_dir = os.path.join(self.start_path, 'fex')  
+    #     fext_dir = os.path.join(self.start_path, 'fex')  
 
-        # load data first time 
-        (X_tra, Y_tra, y_str, _, labs, fex) = pickle.load( open( os.path.join(fext_dir , fina), "rb" ) ) 
-        X_tra = X_tra.astype('float32')
-        X_tra = np.expand_dims(X_tra, 3)
-        n_label_runs = np.zeros(X_tra.shape[0], dtype='int')
-        Y_tra[:] = 0
+    #     # load data first time 
+    #     (X_tra, Y_tra, y_str, _, labs, fex) = pickle.load( open( os.path.join(fext_dir , fina), "rb" ) ) 
+    #     X_tra = X_tra.astype('float32')
+    #     X_tra = np.expand_dims(X_tra, 3)
+    #     n_label_runs = np.zeros(X_tra.shape[0], dtype='int')
+    #     Y_tra[:] = 0
 
-        # save / overwrite  
-        fileNameToSave = os.path.join(fext_dir , fina.replace('.pkl', '') + '_timlab' + '.pkl')
-        allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
+    #     # save / overwrite  
+    #     fileNameToSave = os.path.join(fext_dir , fina.replace('.pkl', '') + '_timlab' + '.pkl')
+    #     allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
 
-        if os.path.isfile(fileNameToSave):
-            print('File already exists and will not be overwritten! (' + fileNameToSave + ')')
-        else:
-            pickle.dump(allObjects, open( fileNameToSave, "wb"))
-
-
+    #     if os.path.isfile(fileNameToSave):
+    #         print('File already exists and will not be overwritten! (' + fileNameToSave + ')')
+    #     else:
+    #         pickle.dump(allObjects, open( fileNameToSave, "wb"))
 
 
-    def labelling_interactive(self, fina, relabel_thld = 3):
-        """
-        Instructions
-        left button:    select a time point
-        middle boutton: go to next segment
-        right boutton:  remove last point
-        """
 
-        fext_dir = os.path.join(self.start_path, 'fex')  
 
-        (X_tra, Y_tra, y_str, _, labs, fex, n_label_runs) = pickle.load( open( os.path.join(fext_dir , fina), "rb" ) ) 
+    # def labelling_interactive(self, fina, relabel_thld = 3):
+    #     """
+    #     Instructions
+    #     left button:    select a time point
+    #     middle boutton: go to next segment
+    #     right boutton:  remove last point
+    #     """
 
-        # check
-        print('X_tra.shape', X_tra.shape)    
-        print('Y_tra.shape', Y_tra.shape)
-        print('labs.shape', labs.shape)
-        print('n_label_runs.shape', n_label_runs.shape)
-        print(n_label_runs)
+    #     fext_dir = os.path.join(self.start_path, 'fex')  
 
-        for i in np.arange(0, X_tra.shape[0],1):
-            print(i)
-            # only label if already labelled less or equal than relabel_thld
-            if n_label_runs[i] <= relabel_thld:
+    #     (X_tra, Y_tra, y_str, _, labs, fex, n_label_runs) = pickle.load( open( os.path.join(fext_dir , fina), "rb" ) ) 
 
-                # sel_label = Y_tra[i].sum(0) >= 1
-                curr_label = y_str[i]  #labs[sel_label][0]
+    #     # check
+    #     print('X_tra.shape', X_tra.shape)    
+    #     print('Y_tra.shape', Y_tra.shape)
+    #     print('labs.shape', labs.shape)
+    #     print('n_label_runs.shape', n_label_runs.shape)
+    #     print(n_label_runs)
+
+    #     for i in np.arange(0, X_tra.shape[0],1):
+    #         print(i)
+    #         # only label if already labelled less or equal than relabel_thld
+    #         if n_label_runs[i] <= relabel_thld:
+
+    #             # sel_label = Y_tra[i].sum(0) >= 1
+    #             curr_label = y_str[i]  #labs[sel_label][0]
                 
-                # get nummerical indes of current sound-type
-                st_num_index = np.where(labs == curr_label)[0].item()
+    #             # get nummerical indes of current sound-type
+    #             st_num_index = np.where(labs == curr_label)[0].item()
 
-                # get stuff already labelled 
-                pre_availabel_labels = Y_tra[i,:,st_num_index]
+    #             # get stuff already labelled 
+    #             pre_availabel_labels = Y_tra[i,:,st_num_index]
 
-                # loop while figure is open 
-                redo = True # to re-show same spectro if uneven nb points 
-                while redo:
-                    print('i', i)
+    #             # loop while figure is open 
+    #             redo = True # to re-show same spectro if uneven nb points 
+    #             while redo:
+    #                 print('i', i)
 
-                    fig, (ax0, ax1) = plt.subplots(2, 1, gridspec_kw={'height_ratios': [4, 1]} )
-                    ax0.imshow(X_tra[i].squeeze().T, aspect = 'auto')
-                    ax0.set_title( 'i: ' + str(i) + '    ' + curr_label)   
-                    ax1.plot(pre_availabel_labels)
-                    ax1.set_xlim([0, pre_availabel_labels.shape[0]])
+    #                 fig, (ax0, ax1) = plt.subplots(2, 1, gridspec_kw={'height_ratios': [4, 1]} )
+    #                 ax0.imshow(X_tra[i].squeeze().T, aspect = 'auto')
+    #                 ax0.set_title( 'i: ' + str(i) + '    ' + curr_label)   
+    #                 ax1.plot(pre_availabel_labels)
+    #                 ax1.set_xlim([0, pre_availabel_labels.shape[0]])
                     
-                    # get interactive point 
-                    cur_vals = plt.ginput(n=-1, timeout=0)
+    #                 # get interactive point 
+    #                 cur_vals = plt.ginput(n=-1, timeout=0)
 
                 
-                    # check that nb points is even
-                    cur_vals = [a[0] for a in cur_vals]
-                    if len(cur_vals)%2 == 0:
-                        redo = False
-                    else:
-                        print('Error nb point must be even!')
-                    plt.close()
+    #                 # check that nb points is even
+    #                 cur_vals = [a[0] for a in cur_vals]
+    #                 if len(cur_vals)%2 == 0:
+    #                     redo = False
+    #                 else:
+    #                     print('Error nb point must be even!')
+    #                 plt.close()
                 
-                # update the actual label array 
-                la = np.array(cur_vals)
-                la.sort() # sort in-place 
-                la = la.reshape((la.shape[0]//2,2))
-                la = la.round().astype(int)
+    #             # update the actual label array 
+    #             la = np.array(cur_vals)
+    #             la.sort() # sort in-place 
+    #             la = la.reshape((la.shape[0]//2,2))
+    #             la = la.round().astype(int)
                 
-                pos_lab_index = []
-                for r in la:
-                    pos_lab_index.extend(np.arange(r[0],r[1]).tolist())
-                pos_lab_index = np.array(pos_lab_index)
+    #             pos_lab_index = []
+    #             for r in la:
+    #                 pos_lab_index.extend(np.arange(r[0],r[1]).tolist())
+    #             pos_lab_index = np.array(pos_lab_index)
 
-                all_int_inices = np.arange(Y_tra[i].shape[0])
-                # get boolean index
-                ind_set_to_one = np.isin(element = all_int_inices, test_elements = pos_lab_index)
-                # and set the shit to 1 where it has to 
-                # Y_tra[i][ind_set_to_one,:][:,st_num_index] = 1
-                Y_tra[i,:,st_num_index][ind_set_to_one] = 1
-                n_label_runs[i] += 1
+    #             all_int_inices = np.arange(Y_tra[i].shape[0])
+    #             # get boolean index
+    #             ind_set_to_one = np.isin(element = all_int_inices, test_elements = pos_lab_index)
+    #             # and set the shit to 1 where it has to 
+    #             # Y_tra[i][ind_set_to_one,:][:,st_num_index] = 1
+    #             Y_tra[i,:,st_num_index][ind_set_to_one] = 1
+    #             n_label_runs[i] += 1
         
-                # save / overwrite  
-                fileNameToSave = os.path.join(fext_dir , fina)
-                allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
-                pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
+    #             # save / overwrite  
+    #             fileNameToSave = os.path.join(fext_dir , fina)
+    #             allObjects = [X_tra, Y_tra, y_str, "unused", labs, fex, n_label_runs]
+    #             pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
 
-                # if i > 1:
-                #     break
+    #             # if i > 1:
+    #             #     break
 
 
 
