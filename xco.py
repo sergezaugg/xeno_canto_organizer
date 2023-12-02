@@ -22,8 +22,7 @@ import numpy as np
 from PIL import Image
 
 # import own functions                    
-from fexutils import read_piece_of_wav, extract_spectrogram
-
+from fexutils import read_piece_of_wav
 
 
 
@@ -289,53 +288,7 @@ class XCO():
 
 
 
-
-
-
-
-
-
-
-
-
-
-    # #-----------------
-    # # make some noize 
-
-    # def add_noise(self, params_fs, params_noize):
-    #     """   
-    #     Take all wav files with a given sampling rate and add acontrolled amount of white noise.
-    #     """
-
-    #     # get list of all relevant dirs inside './downloads/'
-    #     all_d_dirs = next(os.walk(os.path.join(self.start_path, 'downloads')))[1]
-    #     all_d_dirs = [a for a in all_d_dirs if '_wav_' in a]
-    #     all_d_dirs = [a for a in all_d_dirs if str(params_fs) + 'sps' in a]
-
-    #     for pa in all_d_dirs:
-    #         # process_path should contain mp3s, a wav_fs_ subdir will be created inside 
-    #         process_path = os.path.join(self.start_path, 'downloads', pa) 
-
-    #         destin_path = process_path.replace('_wav','_noise') + '_n_' + str(params_noize) 
-    #         if not os.path.exists(destin_path):
-    #             os.mkdir(destin_path)
-
-    #         all_wavs = [a for a in os.listdir(process_path) if '.wav' in a]
-
-    #         for finam in all_wavs:
-    #             patin = os.path.join(process_path, finam)
-    #             paout = os.path.join(destin_path, finam)
-
-    #             # only convert if wav file does not yet exist 
-    #             if not os.path.exists(paout):
-    #                 try:
-    #                     self.__add_some_noise(patin, paout, noize_fac = params_noize)
-    #                 except:
-    #                     print("An exception occured!")
-
-
-
-    def extract_spectrograms(self, dir_tag, map_sound_type_dic = None):
+    def extract_spectrograms(self, dir_tag):
 
         # get df with file meta info 
         df_all = self.summary(save_csv = False)
@@ -351,12 +304,8 @@ class XCO():
         seg_step_size = 1.0 
         # duration of a segment in seconds:
         duratSec = 5
-        # which meta_info_ids to use from CAR-DB:
-        meta_info_id_list = self.start_path
         # keep only meta_info_ids that have this fs defined in DB:
         target_sampl_freq = 32000
-        # how many frequency bins to use in final arrays:
-        n_mel_filters = 128
         # FFT window size
         win_siz = 1024
         # FFT window overlap
@@ -370,32 +319,10 @@ class XCO():
         allWavFileNames = [a[0] + a[1] for a in path_and_file_zipped]
         sel = [os.path.exists(p) for p in allWavFileNames]
         df_all['allWavFileNames'] = allWavFileNames
-
         # exclude non available files from df 
         df_all = df_all.loc[sel,:]
         df_all.shape
 
-
-
-        # facultatively map to new sound-type name
-        if map_sound_type_dic is None:
-            df_all['sound_type'] = df_all['full_spec_name']
-        else:
-            def map_to_sound_type(s):
-                return(map_sound_type_dic[s])
-            df_all['sound_type'] = df_all['full_spec_name'].apply(map_to_sound_type)
-
-
-        print(df_all['sound_type'] .value_counts())
-
-        # extract info
-        target_sounds = np.unique(np.array(df_all['sound_type']))
-        n_targ_sounds = target_sounds.shape[0]
-        
-
-
-
-      
         #::::::::::::::::::::::::::::::::::::::
         # pre compute stuff 
         N = duratSec * target_sampl_freq
@@ -415,27 +342,12 @@ class XCO():
         X_freq.shape
         X_time.shape
         #::::::::::::::::::::::::::::::::::::::
-        
-        
-        # to be saved with file 
-        time_bins = X_time
-        
-        print('time_bins.shape:', time_bins.shape)
-        
-        # mel_basis = librosa.filters.mel(sr = target_sampl_freq, n_fft= win_siz, n_mels=n_mel_filters)
-        # print('mel_basis.shape', mel_basis.shape)
-        # n_f_bins_1 = mel_basis.shape[0]
 
-        n_f_bins_1 = X_freq.shape[0]
+        # n_f_bins_1 = X_freq.shape[0]
         
-
-        target_class_id = pd.Series(['none'])
-        
-
         # main loop ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::  
 
         time_stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        fileNameToSave =  feature_extraction_dir + "spectro_" + time_stamp + ".pkl"
 
         # prepare loop over all wav files
         def get_wav_file_duration(wavFileName):
@@ -452,25 +364,11 @@ class XCO():
         nb_segments_per_file = file_durs // duratSec
         tot_nb_segments = int(nb_segments_per_file.sum())
         
-        # initialize empty array
-        X = -1 + np.zeros(shape = (tot_nb_segments, X_time.shape[0], n_f_bins_1) , dtype = 'float32'  )
-        #    seg_id = np.zeros(shape = (tot_nb_segments) , dtype = 'float16'  )
-        # generte labels 
-        y_seq = np.zeros(shape = (tot_nb_segments, X_time.shape[0], n_targ_sounds) , dtype = 'int8'  )
-
-        y_str = []
-    
-        # initialize iterator for segments
-        i_seg = 0  
-        
         # loop over all wav files 
         for r in  df_all.iterrows():  
             # get full path to wav file             
             wavFileName = r[1]['allWavFileNames']    
-            
-            # get label index
-            lab_index_bool = target_sounds == r[1]['sound_type']
-            
+                        
             # open wav file and get meta-information 
             waveFile = wave.open(wavFileName, 'r')
             myFs = waveFile.getframerate()
@@ -494,16 +392,28 @@ class XCO():
                 # FEX 
                 startSec = ii*duratSec
                 sig = read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
-                X_fex = extract_spectrogram(sig, myFs, win_siz, win_olap).squeeze()
 
-                print('X_fex.shape', X_fex.shape)
-                print('type(X_fex)', type(X_fex))
-
-                X[i_seg,:,:] = X_fex
-
-
+                # de-mean
+                sig = sig - sig.mean() 
+                # compute spectrogram
+                _, _, X = sgn.spectrogram(x = sig, 
+                    fs = myFs, 
+                    window = 'hamming', 
+                    nperseg = win_siz, 
+                    noverlap = win_olap, 
+                    detrend = 'constant', 
+                    return_onesided = True, 
+                    scaling = 'spectrum', 
+                    mode = 'psd')
+                # transpose and log 
+                X = X.transpose()
+                X = np.log10(X)
+                X = X.astype('float32') 
+                # scale
+                X = (X - X.mean()) / X.std()
+               
                 # save image as PNG 
-                arr = X_fex.T
+                arr = X.T
                 arr.shape
                 arr = np.flip(arr, axis=0)
                 # normalize 
@@ -517,41 +427,19 @@ class XCO():
                 colored_image = cm(arr)
                 im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
                 # save as image 
-                # im.save(os.path.join(xc.start_path, "test_image_dev_01.png"))
                 aaa_path = os.path.join(self.start_path, 'fex', os.path.basename(wavFileName) + str(ii)+ ".png")
                 print(self.start_path)
                 print("wavFileName", os.path.basename(wavFileName))
                 im.save(aaa_path)
 
-                # END FEX 
+                # Get the color map by name:
+                # plt.col ormaps()
+                # map_val = 'viridis'
+                # map_val = 'magma'
+                # map_val = 'inferno'
+                # map_val = 'plasma'
+                # map_val = 'twilight'
 
-              
-            
-
-        # organize detection parameters for later storage to file 
-        detection_param = {
-            'meta_info_id' : 'unused',
-            'target_sampl_freq' : target_sampl_freq,
-            'duratSec' : duratSec, 
-            'seg_step_size' : seg_step_size,
-            'win_siz' : win_siz, 
-            'win_olap' : win_olap,
-            'time_bins' : time_bins,
-            'wave_files_source_path' : meta_info_id_list,
-            # new 
-            'mel_scaling' : 'not_used_anymore',
-            'n_mel_filters' : n_mel_filters,
-            'target_sounds' : target_sounds,
-            'target_class_id' : target_class_id,
-            }
-
-
-        # y_str = np.array(y_str)
-
-        # # save 
-        # allObjects = [X, y_seq, y_str, "unused", target_sounds, detection_param]
-        # pickle.dump( allObjects, open( fileNameToSave, "wb" ) )
-        self.X = X
     
 
 

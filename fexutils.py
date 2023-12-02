@@ -34,41 +34,6 @@ def read_piece_of_wav(f, start_sec, durat_sec, fs, n_ch, sampwidth):
     return(sig)
 
 
-def extract_spectrogram(sig, fs, win_siz, win_olap):
-    """
-    transform waveform to mel spectrogram 
-    """
-    # de-mean
-    sig = sig - sig.mean() 
-    # compute spectrogram
-    _, _, X = sgn.spectrogram(x = sig, 
-        fs = fs, 
-        window = 'hamming', 
-        nperseg = win_siz, 
-        noverlap = win_olap, 
-        detrend = 'constant', 
-        return_onesided = True, 
-        scaling = 'spectrum', 
-        mode = 'psd')
-    # transpose and log 
-    X = X.transpose()
-    X = np.log10(X)
-    # equalize
-    nTimeBins = X.shape[0]  
-    nFreqBins = X.shape[1]
-    mystftMea = np.median(X, axis=0) 
-    mystftMea = np.broadcast_to(array = mystftMea, shape = (nTimeBins, nFreqBins))
-    X = np.subtract(X, mystftMea)
-    # mel
-    # X = np.matmul(X, mel_basis.T )
-    X = X.astype('float32') 
-    # scale
-    X = (X - X.mean()) / X.std()
-    # add a dummy dim
-    X = np.expand_dims(X, 0)
-    X = np.expand_dims(X, 3)
-    # return
-    return(X)  
 
 
 
