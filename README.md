@@ -86,7 +86,6 @@ pip install numpy
 pip install soundfile
 pip install scipy
 pip install matplotlib
-pip install librosa
 
 
 

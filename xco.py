@@ -1,6 +1,6 @@
 """
-Created 20211010
-@author: serge Zaugg
+Created 20231203
+Author: Serge Zaugg
 """
 
 import os
@@ -16,13 +16,39 @@ import soundfile as sf
 import wave
 import pickle
 import scipy.signal as sgn 
-# import librosa  
 import matplotlib.pyplot as plt  
 import numpy as np
 from PIL import Image
+import struct
 
-# import own functions                    
-from fexutils import read_piece_of_wav
+
+def read_piece_of_wav(f, start_sec, durat_sec, fs, n_ch, sampwidth):
+    """ 
+    f = wav file name 
+    """
+    # read wav 
+    wave_file = wave.open(f, 'r')
+    wave_file.setpos(int(fs*start_sec)) 
+    Nread = int(fs*durat_sec)
+    sig_byte = wave_file.readframes(Nread) #read the all the samples from the file into a byte string
+    wave_file.close()
+    # convert bytes to a np-array 
+    # struct.unpack(fmt, string)
+    # h : int16 signed
+    # H : int16 unsigned
+    # i : int32 signed
+    # I : int32 unsigned
+    if sampwidth == 2 :
+        unpstr = '<{0}h'.format(Nread*n_ch) # < = little-endian h = 2 bytes ,16-bit 
+    else:
+        raise ValueError("Not a 16 bit signed interger audio formats.")
+    # convert byte string into a list of ints
+    sig = (struct.unpack(unpstr, sig_byte)) 
+    sig = np.array(sig, dtype=float)
+    # convert from int to float
+    sig = sig / ((2**(sampwidth*8))/2)
+    # return 
+    return(sig)
 
 
 
@@ -38,19 +64,6 @@ class XCO():
         x = x.split(':')
         x = int(x[0])*60 + int(x[1])
         return(x)
-
-    def __add_some_noise(self, painp, paout, noize_fac = 0.1):
-        """Load a wav file, add noise and save as wav"""
-        assert(painp != paout), "painp and paout cannot be the same!"
-        # load wav
-        data, fs = sf.read(painp)
-        # add noize 
-        noiz_std = noize_fac*data.std()
-        noiz = np.random.normal(loc=0.0, scale=noiz_std, size=data.shape[0])
-        data = data + noiz
-        # Write   
-        sf.write(paout, data, fs)
-
 
     def make_param(self):
         """  """
@@ -78,6 +91,7 @@ class XCO():
     def summary(self, save_csv = True):
         # import all pkl with an append all dfs and export as csv
         main_download_path = os.path.join(self.start_path, 'downloads')
+        # main_download_path = os.path.join('C:\\Users\\sezau\\Desktop\\data2', 'downloads')
 
         all_pkls = [a for a in os.listdir(main_download_path) if '_meta.pkl' in a]
 
@@ -246,129 +260,72 @@ class XCO():
 
 
 
-    def mp3_to_wav(self, params_fs = 48000):
+    def mp3_to_wav(self, dir_tag, params_fs):
         """   
         Convert mp3 to wav, this is a wrapper around ffmpeg.
-        Looks for files ending in .mp3 throught all dirs inside ./downloads/ 
-        and attempt to convert them to wav with ffmpeg
+        Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
+        """
+        self.dir_tag = dir_tag
+        self.params_fs = params_fs
+        # 
+        all_dirs = next(os.walk(os.path.join(self.start_path, 'downloads')))[1]
+        thedir = [a for a in all_dirs if "_orig" in a and self.dir_tag in a][0]
+        path_source = os.path.join(self.start_path, 'downloads', thedir)
+        path_destin = os.path.join(self.start_path, 'downloads', thedir.replace('_orig','_wav_' + str(self.params_fs) + 'sps'))
+        if not os.path.exists(path_destin):
+            os.mkdir(path_destin)
+        all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
+
+        for finam in all_mp3s:
+            print(finam)
+            patin = os.path.join(path_source, finam)
+            paout = os.path.join(path_destin, finam.replace('.mp3','.wav' ))
+            # only convert if wav file does not yet exist 
+            if not os.path.exists(paout):
+                # convert mp3 to wav by call to ffmpeg
+                try:
+                    subprocess.call(['ffmpeg', 
+                        '-y', # -y overwrite without asking 
+                        '-i', patin, # '-i' # infile must be specifitd after -i
+                        '-ar', str(self.params_fs), # -ar rate set audio sampling rate (in Hz)
+                        '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
+                        paout
+                        ])
+                except:
+                    print("An exception occured!")
+
+
+
+    
+
+
+
+
+
+    def extract_spectrograms(self, dir_tag, target_sampl_freq, duratSec, win_siz, win_olap, colormap = 'viridis'):
+        """
+        # plt.col ormaps()
+        # 'viridis' 'inferno'  'magma'  'inferno'  'plasma'  'twilight'
         """
 
-        # get list of all dirs inside './downloads/'
-        all_d_dirs = next(os.walk(os.path.join(self.start_path, 'downloads')))[1]
-        all_d_dirs = [a for a in all_d_dirs if '_orig' in a]
-
-        for pa in all_d_dirs:
-            # process_path should contain mp3s, a wav_fs_ subdir will be created inside 
-            process_path = os.path.join(self.start_path, 'downloads', pa) 
-
-            destin_path = process_path.replace('_orig','') + '_wav_' + str(params_fs) + 'sps'
-            if not os.path.exists(destin_path):
-                os.mkdir(destin_path)
-
-            all_mp3s = [a for a in os.listdir(process_path) if '.mp3' in a]
-
-            for finam in all_mp3s:
-                patin = os.path.join(process_path, finam)
-                paout = os.path.join(destin_path, finam.replace('.mp3','.wav' ))
-
-                # only convert if wav file does not yet exist 
-                if not os.path.exists(paout):
-
-                    # convert mp3 to wav by call to ffmpeg
-                    try:
-                        subprocess.call(['ffmpeg', 
-                            '-y', # -y overwrite without asking 
-                            '-i', patin, # '-i' # infile must be specifitd after -i
-                            '-ar', str(params_fs), # -ar rate set audio sampling rate (in Hz)
-                            '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
-                            paout
-                            ])
-                    except:
-                        print("An exception occured!")
-
-
-
-    def extract_spectrograms(self, dir_tag):
-
-        # get df with file meta info 
-        df_all = self.summary(save_csv = False)
-
-        # place where extracted features will be saved:
-        feature_extraction_dir = self.start_path + '/fex/'
-        if not os.path.exists(feature_extraction_dir):
-            os.mkdir(feature_extraction_dir)
+        #-------------------------------- 
+        all_dirs = next(os.walk(os.path.join(self.start_path, 'downloads')))[1]
+        thedir = [a for a in all_dirs if "_wav_" in a and dir_tag in a]
+        thedir = [a for a in thedir if str(target_sampl_freq) in a ][0]
+        path_source = os.path.join(self.start_path, 'downloads', thedir)
+        path_destin = os.path.join(self.start_path, 'downloads', thedir.replace('_wav_','_img_'))
+        if not os.path.exists(path_destin):
+            os.mkdir(path_destin)
+        all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
+        allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
 
         #--------------------------------
         # parameters 
-        # keep hardcoded - should not be changed
         seg_step_size = 1.0 
-        # duration of a segment in seconds:
-        duratSec = 5
-        # keep only meta_info_ids that have this fs defined in DB:
-        target_sampl_freq = 32000
-        # FFT window size
-        win_siz = 1024
-        # FFT window overlap
-        win_olap = 512+256
         
-        
-        # construct list of full path to relevant wav files 
-        path_li = [a.replace('_orig', dir_tag) + '/' for a in df_all['downloaded_to_path'].tolist()]
-        file_li = [a + '.wav' for a in df_all['downloaded_to_file_stem'].tolist()]
-        path_and_file_zipped = zip(path_li, file_li)
-        allWavFileNames = [a[0] + a[1] for a in path_and_file_zipped]
-        sel = [os.path.exists(p) for p in allWavFileNames]
-        df_all['allWavFileNames'] = allWavFileNames
-        # exclude non available files from df 
-        df_all = df_all.loc[sel,:]
-        df_all.shape
-
-        #::::::::::::::::::::::::::::::::::::::
-        # pre compute stuff 
-        N = duratSec * target_sampl_freq
-        sig = np.random.normal(size=N)
-        sig.shape
-        
-        X_freq, X_time, Xtemp = sgn.spectrogram(x = sig, 
-            fs = target_sampl_freq, 
-            window = 'hamming', 
-            nperseg = win_siz, 
-            noverlap = win_olap, 
-            detrend = 'constant', 
-            return_onesided = True, 
-            scaling = 'spectrum', 
-            mode = 'psd')
-        
-        X_freq.shape
-        X_time.shape
-        #::::::::::::::::::::::::::::::::::::::
-
-        # n_f_bins_1 = X_freq.shape[0]
-        
-        # main loop ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::  
-
-        time_stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # prepare loop over all wav files
-        def get_wav_file_duration(wavFileName):
-            waveFile = wave.open(wavFileName, 'r')
-            myFs = waveFile.getframerate()
-            totNsam = waveFile.getnframes()
-            totDurFile_s = totNsam / myFs
-            waveFile.close()
-            return(totDurFile_s)
-        
-        # get duration of each file
-        file_durs = np.array([get_wav_file_duration(x) for x in allWavFileNames])
-        # get nb segment for each file
-        nb_segments_per_file = file_durs // duratSec
-        tot_nb_segments = int(nb_segments_per_file.sum())
-        
-        # loop over all wav files 
-        for r in  df_all.iterrows():  
-            # get full path to wav file             
-            wavFileName = r[1]['allWavFileNames']    
-                        
+        # loop over wav files 
+        for wavFileName in  allWavFileNames:  
+                
             # open wav file and get meta-information 
             waveFile = wave.open(wavFileName, 'r')
             myFs = waveFile.getframerate()
@@ -388,11 +345,8 @@ class XCO():
             # loop over segments within file     
             for ii in  np.arange(0, (totNbSegments - 0.99), seg_step_size)   :
                 print(ii)
-
-                # FEX 
                 startSec = ii*duratSec
                 sig = read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
-
                 # de-mean
                 sig = sig - sig.mean() 
                 # compute spectrogram
@@ -408,38 +362,27 @@ class XCO():
                 # transpose and log 
                 X = X.transpose()
                 X = np.log10(X)
-                X = X.astype('float32') 
-                # scale
-                X = (X - X.mean()) / X.std()
-               
                 # save image as PNG 
                 arr = X.T
-                arr.shape
                 arr = np.flip(arr, axis=0)
                 # normalize 
                 arr = arr - arr.min()
-                arr = np.log(arr+1.0)
                 arr = arr/arr.max()
-                # Get the color map by name:                
-                map_val = 'inferno'
+                # color map             
+                map_val = colormap
                 cm = plt.get_cmap(map_val)
-                # Apply the colormap like a function to any array:
                 colored_image = cm(arr)
                 im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
                 # save as image 
-                aaa_path = os.path.join(self.start_path, 'fex', os.path.basename(wavFileName) + str(ii)+ ".png")
-                print(self.start_path)
-                print("wavFileName", os.path.basename(wavFileName))
-                im.save(aaa_path)
+                image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_') + str(ii) + ".png")
+                im.save(image_save_path)
 
-                # Get the color map by name:
-                # plt.col ormaps()
-                # map_val = 'viridis'
-                # map_val = 'magma'
-                # map_val = 'inferno'
-                # map_val = 'plasma'
-                # map_val = 'twilight'
+              
 
+
+
+
+  
     
 
 
