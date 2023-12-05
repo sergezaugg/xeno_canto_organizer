@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 import struct
+import numpy as np
 
 
 def read_piece_of_wav(f, start_sec, durat_sec, fs, n_ch, sampwidth):
@@ -222,7 +223,7 @@ class XCO():
                     json.dump(dl_params, fp,  indent=4)
     
                 # download 
-                print("Downloading wav files ...")
+                print("Downloading files ...")
                 for re_i in recs_pool:
                     # re_i["also"] = ' + '.join(re_i["also"])
                     # full_download_string = 'http:' + re_i["file"]
@@ -302,7 +303,7 @@ class XCO():
 
 
 
-    def extract_spectrograms(self, dir_tag, target_sampl_freq, duratSec, win_siz, win_olap, colormap = 'viridis'):
+    def extract_spectrograms(self, dir_tag, target_sampl_freq, duratSec, win_siz, win_olap, seg_step_size = 1.0, colormap = 'viridis'):
         """
         # plt.col ormaps()
         # 'viridis' 'inferno'  'magma'  'inferno'  'plasma'  'twilight'
@@ -319,10 +320,19 @@ class XCO():
         all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
         allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
 
-        #--------------------------------
-        # parameters 
-        seg_step_size = 1.0 
+        #-------------------------------- 
+        params_dict = {
+            "sampling_frequency" : target_sampl_freq,
+            "segment_duration_sec" : duratSec,
+            "segment_step_size" : seg_step_size,
+            "fft_window_size_bins" : win_siz,
+            "fft_window_overlap_bins" : win_olap,
+            "colormap" : colormap,
+            }
         
+        with open(os.path.join(path_destin, "feature_extraction_parameters.pkl"), 'wb') as f:
+            pickle.dump(params_dict, f)
+
         # loop over wav files 
         for wavFileName in  allWavFileNames:  
                 
@@ -360,11 +370,12 @@ class XCO():
                     scaling = 'spectrum', 
                     mode = 'psd')
                 # transpose and log 
+                X = np.flip(X, axis=0)
                 X = X.transpose()
                 X = np.log10(X)
+
                 # save image as PNG 
                 arr = X.T
-                arr = np.flip(arr, axis=0)
                 # normalize 
                 arr = arr - arr.min()
                 arr = arr/arr.max()
@@ -382,9 +393,23 @@ class XCO():
 
 
 
-  
-    
 
+
+
+
+
+# from skimage import filters
+# import maad  
+# from  maad import sound
+
+# print(">>>>>>>>>>>", X.shape)
+# X = sound.median_equalizer(X)
+# print(">>>>>>>>>>>", X.shape)
+
+
+# # new 
+# X_mea = filters.gaussian(X, sigma=45, mode='nearest', cval=0, preserve_range=False, truncate=4.0)
+# X = X - X_mea
 
 
 
