@@ -46,11 +46,11 @@ xc.summary(save_csv = True)
 from torchvision.io import read_image
 from torchvision.models import resnet50, ResNet50_Weights
 import torch
-from PIL import Image
+# from PIL import Image
 import numpy as np
 # from torchvision import models
 from torchsummary import summary
-
+import gc
 
 # Step 1: Initialize model with the best available weights
 weights = ResNet50_Weights.DEFAULT
@@ -67,6 +67,7 @@ preprocess = weights.transforms()
 
 pa = os.path.join('C:\\Users\\sezau\\Desktop\\project01', 'downloads', '20231208T090151_img_24000sps')
 
+# first load all images 
 imgs = []
 for fi in [a for a in os.listdir(pa) if ".png" in a]:
     fi_fullpa = os.path.join(pa, fi)
@@ -76,18 +77,38 @@ for fi in [a for a in os.listdir(pa) if ".png" in a]:
     type(img)
     imgs.append(img)
 
-# predict a batch of images 
-imgs = imgs[0:64]
-imgs_arr = np.array(imgs)
-imgs_arr = torch.from_numpy(imgs_arr)
-batch = preprocess(imgs_arr)
-batch.shape
-prediction = model(batch)
-prediction.shape
 
-prediction.min()
-prediction.max()
-prediction.mean()
+# predict by batches 
+batch_size = 32
+feature_vect = []
+for i in np.arange(0,len(imgs), batch_size):
+    print(i)
+    # predict a batch of images 
+    img_batch = imgs[(i):(i+batch_size)]
+    imgs_arr = np.array(img_batch)
+    imgs_arr = torch.from_numpy(imgs_arr)
+    batch = preprocess(imgs_arr)
+    feature_vect_i = model(batch)
+    del(batch, imgs_arr, img_batch)
+    gc.collect()
+    print(feature_vect_i.shape)
+    # convert to numpy as copy 
+    feat_arr = feature_vect_i.cpu().detach().numpy() 
+    feature_vect.append(feat_arr)
+    del(feat_arr)
+    gc.collect()
+
+
+len(feature_vect)
+feature_mat = np.concatenate(feature_vect)
+feature_mat.shape
+
+
+
+
+
+
+
 
 
 
