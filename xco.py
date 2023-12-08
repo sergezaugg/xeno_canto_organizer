@@ -383,6 +383,7 @@ class XCO():
 
                 # save image as PNG 
                 arr = X.T
+                print(arr.shape)
                 # normalize 
                 arr = arr - arr.min()
                 arr = arr/arr.max()
@@ -394,7 +395,7 @@ class XCO():
                 # save as image 
                 image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
                 im.save(image_save_path)
-
+        return(arr.shape)
               
 
 
