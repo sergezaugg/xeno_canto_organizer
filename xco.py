@@ -21,6 +21,9 @@ import numpy as np
 from PIL import Image
 import struct
 import numpy as np
+# from skimage import filters
+# import maad  
+from  maad import sound
 
 
 def read_piece_of_wav(f, start_sec, durat_sec, fs, n_ch, sampwidth):
@@ -370,7 +373,11 @@ class XCO():
                     scaling = 'spectrum', 
                     mode = 'psd')
                 # transpose and log 
-                X = np.flip(X, axis=0)
+                X = np.flip(X, axis=0) # so that hifg freqs at to of image 
+
+                # equalize 
+                X = sound.median_equalizer(X) 
+
                 X = X.transpose()
                 X = np.log10(X)
 
@@ -385,7 +392,7 @@ class XCO():
                 colored_image = cm(arr)
                 im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
                 # save as image 
-                image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_') + str(ii) + ".png")
+                image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
                 im.save(image_save_path)
 
               
