@@ -127,6 +127,7 @@ class XCO():
 
     def make_param(self):
         """  """
+
         dl_params = {
             "min_duration_s" : 5,
             "max_duration_s" : 15,
@@ -143,8 +144,31 @@ class XCO():
                 "Corvus coronoides"
                 ]
             }
+        
 
-        with open(os.path.join(self.start_path, 'example.json'), 'w') as f:
+        # dl_params = {
+        #     "min_duration_s" : 5,
+        #     "max_duration_s" : 20,
+        #     "quality" : ["A", "B"],
+        #     "exclude_nd" : True,
+        #     "country" :[
+        #         "Switzerland",
+        #         "Germany",
+        #         "France"
+        #         ],      
+        #     "species" :[
+        #         "Corvus corax", 
+        #         "Cyanistes caeruleus",
+        #         "Parus major",
+        #         "Poecile montanus", 
+        #         "Aegithalos caudatus",
+        #         "Lophophanes cristatus",
+        #         "Periparus ater",
+        #         "Poecile palustris",
+        #         ]
+        #     }
+
+        with open(os.path.join(self.start_path, 'download_params.json'), 'w') as f:
             json.dump(dl_params, f,  indent=4)
 
 
@@ -275,9 +299,9 @@ class XCO():
                 source_path = os.path.join(main_download_path, self.download_tag + '_orig')
                 if not os.path.exists(source_path):
                     os.mkdir(source_path)
-                # make a copy of parameter file and meta information
-                with open(os.path.join(main_download_path, self.download_tag + '_params.json'), 'w') as fp:
-                    json.dump(dl_params, fp,  indent=4)
+                # # make a copy of parameter file and meta information
+                # with open(os.path.join(main_download_path, self.download_tag + '_params.json'), 'w') as fp:
+                #     json.dump(dl_params, fp,  indent=4)
     
                 # download 
                 print("Downloading files ...")
