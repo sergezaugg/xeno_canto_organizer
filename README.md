@@ -27,6 +27,14 @@ The tool is meant for incrementally adding consistently with previously used dat
 ## prerequisites
 ffmpg
 
+https://ffmpeg.org/
+
+
+pip install pymp3
+
+
+
+
 ## Python dependencies
 tbd
 
@@ -86,6 +94,7 @@ pip install numpy
 pip install soundfile
 pip install scipy
 pip install matplotlib
+pip install scikit-maad
 
 
 

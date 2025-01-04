@@ -10,20 +10,19 @@ import requests
 import pandas as pd
 import unidecode
 import datetime 
-import subprocess
 import numpy as np 
 import soundfile as sf
 import wave
+from wave import Wave_write
 import pickle
 import scipy.signal as sgn 
+from scipy.io.wavfile import write
 import matplotlib.pyplot as plt  
-import numpy as np
 from PIL import Image
 import struct
-import numpy as np
-# from skimage import filters
-# import maad  
+import mp3
 from  maad import sound
+
 
 
 def read_piece_of_wav(f, start_sec, durat_sec, fs, n_ch, sampwidth):
@@ -56,11 +55,68 @@ def read_piece_of_wav(f, start_sec, durat_sec, fs, n_ch, sampwidth):
 
 
 
+
+def wav_to_mono_convert_fs(f, f_out, fs_new):
+    """ 
+    read wave file f, convert to mono, re-sample and save a wave in f_out 
+    """
+    # read wav 
+    wave_file = wave.open(f, 'r')
+    n_ch = wave_file.getnchannels()
+    print('n_ch', n_ch)
+    sampwidth = wave_file.getsampwidth()
+    print('orig fs', wave_file.getframerate())
+    wave_file.setpos(int(0)) 
+    Nread = int(wave_file.getnframes())
+    sig_byte = wave_file.readframes(Nread) #read the all the samples from the file into a byte string
+    wave_file.close()
+    # convert bytes to a np-array 
+    # struct.unpack(fmt, string)
+    # h : int16 signed
+    # H : int16 unsigned
+    # i : int32 signed
+    # I : int32 unsigned
+    if sampwidth == 2 :
+        unpstr = '<{0}h'.format(Nread*n_ch) # < = little-endian h = 2 bytes ,16-bit 
+    else:
+        raise ValueError("Not a 16 bit signed interger audio formats.")
+    # convert byte string into a list of ints
+    sig = (struct.unpack(unpstr, sig_byte)) 
+    sig = np.array(sig, dtype=float)
+    # convert from int to float
+    # sig = sig / ((2**(sampwidth*8))/2)
+
+    # take only first channel 
+    sig = sig[0::n_ch]
+
+    # resample to adjust fs
+    sampling_rate = wave_file.getframerate()
+    number_of_samples = round(len(sig) * float(fs_new) / sampling_rate)
+    sig = sgn.resample(sig, number_of_samples)
+
+    # signal as numpy integer array 
+    sig = sig.astype('int16')
+    # save to file in wav format
+    write(filename = f_out, rate = fs_new, data = sig)
+    # return 
+    return("converted")
+
+# pa_wav_in = "C:/Users/sezau/Desktop/project01/downloads/20250104T110600_orig/zzz.wav"
+# pa_wav_out = "C:/Users/sezau/Desktop/project01/downloads/20250104T110600_orig/zzz_002.wav"
+# wav_to_mono_convert_fs(f = pa_wav_in, f_out = pa_wav_out, fs_new = 4000)
+
+
+
+
+
+
+
 class XCO():
 
     def __init__(self, start_path):
         self.XC_API_URL = 'https://www.xeno-canto.org/api/2/recordings'
         self.start_path = start_path # '/home/serge/sz_main/ml/data/xc_dev'
+        self.download_tag = 'downloaded_data'  
 
     # helper functions 
     def __convsec(self, x):
@@ -94,8 +150,7 @@ class XCO():
 
     def summary(self, save_csv = True):
         # import all pkl with an append all dfs and export as csv
-        main_download_path = os.path.join(self.start_path, 'downloads')
-        # main_download_path = os.path.join('C:\\Users\\sezau\\Desktop\\data2', 'downloads')
+        main_download_path = os.path.join(self.start_path)
 
         all_pkls = [a for a in os.listdir(main_download_path) if '_meta.pkl' in a]
 
@@ -136,7 +191,7 @@ class XCO():
     # main function to download mp3 from XC, or just get a summary
     def get(self, params_json, params_download = False):
 
-        main_download_path = os.path.join(self.start_path, 'downloads')
+        main_download_path = os.path.join(self.start_path)
 
         if not os.path.exists(main_download_path):
             os.mkdir(main_download_path)
@@ -217,12 +272,11 @@ class XCO():
             if params_download:
                 print("Writing meta-information to pkl ...") 
                 # Create time-stamped directory where files will be downloaded
-                timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
-                source_path = os.path.join(main_download_path, timstamp + '_orig')
+                source_path = os.path.join(main_download_path, self.download_tag + '_orig')
                 if not os.path.exists(source_path):
                     os.mkdir(source_path)
                 # make a copy of parameter file and meta information
-                with open(os.path.join(main_download_path, timstamp + '_params.json'), 'w') as fp:
+                with open(os.path.join(main_download_path, self.download_tag + '_params.json'), 'w') as fp:
                     json.dump(dl_params, fp,  indent=4)
     
                 # download 
@@ -247,8 +301,8 @@ class XCO():
                     re_i['downloaded_to_file_stem'] = finam2
                 df_all_extended = pd.DataFrame(recs_pool)
                 df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
-                df_all_extended.to_csv(   os.path.join(main_download_path, timstamp + '_meta.csv') )
-                df_all_extended.to_pickle(os.path.join(main_download_path, timstamp + '_meta.pkl') )
+                df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
+                df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
                 
             print("")
             print("Details:")
@@ -264,18 +318,20 @@ class XCO():
 
 
 
-    def mp3_to_wav(self, dir_tag, params_fs):
+# self.download_tag
+
+    def mp3_to_wav(self, params_fs):
         """   
         Convert mp3 to wav, this is a wrapper around ffmpeg.
         Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
         """
-        self.dir_tag = dir_tag
+        
         self.params_fs = params_fs
         # 
-        all_dirs = next(os.walk(os.path.join(self.start_path, 'downloads')))[1]
-        thedir = [a for a in all_dirs if "_orig" in a and self.dir_tag in a][0]
-        path_source = os.path.join(self.start_path, 'downloads', thedir)
-        path_destin = os.path.join(self.start_path, 'downloads', thedir.replace('_orig','_wav_' + str(self.params_fs) + 'sps'))
+        all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
+        thedir = [a for a in all_dirs if "_orig" in a and self.download_tag in a][0]
+        path_source = os.path.join(self.start_path, thedir)
+        path_destin = os.path.join(self.start_path, thedir.replace('_orig','_wav_' + str(self.params_fs) + 'sps'))
         if not os.path.exists(path_destin):
             os.mkdir(path_destin)
         all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
@@ -288,15 +344,38 @@ class XCO():
             if not os.path.exists(paout):
                 # convert mp3 to wav by call to ffmpeg
                 try:
-                    subprocess.call(['ffmpeg', 
-                        '-y', # -y overwrite without asking 
-                        '-i', patin, # '-i' # infile must be specifitd after -i
-                        '-ar', str(self.params_fs), # -ar rate set audio sampling rate (in Hz)
-                        '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
-                        paout
-                        ])
+
+                    # subprocess.call(['ffmpeg', 
+                    #     '-y', # -y overwrite without asking 
+                    #     '-i', patin, # '-i' # infile must be specifitd after -i
+                    #     '-ar', str(self.params_fs), # -ar rate set audio sampling rate (in Hz)
+                    #     '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
+                    #     paout
+                    #     ])
+       
+                    # convert from mp3 to wave (saves a temporary wave file)
+                    with open(patin, 'rb') as read_file, open(paout, 'wb') as write_file:
+                        decoder = mp3.Decoder(read_file)
+                        sample_rate = decoder.get_sample_rate()
+                        nchannels = decoder.get_channels()
+                        wav_file = Wave_write(write_file)
+                        wav_file.setnchannels(nchannels)
+                        wav_file.setsampwidth(2)
+                        wav_file.setframerate(sample_rate)
+                        while True:
+                            pcm_data = decoder.read()
+                            if not pcm_data:
+                                break
+                            else:
+                                wav_file.writeframes(pcm_data)
+
+                        # convert to mono an adjust fs, overwrite existin wave!
+                        wav_to_mono_convert_fs(f = paout, f_out = paout, fs_new = self.params_fs)
+
                 except:
                     print("An exception occured!")
+        # params = {'new_fs': params_fs, 'bbb': 333}            
+        # return(params)            
 
 
 
@@ -306,18 +385,18 @@ class XCO():
 
 
 
-    def extract_spectrograms(self, dir_tag, target_sampl_freq, duratSec, win_siz, win_olap, seg_step_size = 1.0, colormap = 'viridis'):
+    def extract_spectrograms(self, target_sampl_freq, duratSec, win_siz, win_olap, seg_step_size = 1.0, colormap = 'viridis'):
         """
         # plt.col ormaps()
         # 'viridis' 'inferno'  'magma'  'inferno'  'plasma'  'twilight'
         """
 
         #-------------------------------- 
-        all_dirs = next(os.walk(os.path.join(self.start_path, 'downloads')))[1]
-        thedir = [a for a in all_dirs if "_wav_" in a and dir_tag in a]
+        all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
+        thedir = [a for a in all_dirs if "_wav_" in a and self.download_tag in a]
         thedir = [a for a in thedir if str(target_sampl_freq) in a ][0]
-        path_source = os.path.join(self.start_path, 'downloads', thedir)
-        path_destin = os.path.join(self.start_path, 'downloads', thedir.replace('_wav_','_img_'))
+        path_source = os.path.join(self.start_path,  thedir)
+        path_destin = os.path.join(self.start_path,  thedir.replace('_wav_','_img_'))
         if not os.path.exists(path_destin):
             os.mkdir(path_destin)
         all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
