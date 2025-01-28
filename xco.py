@@ -426,6 +426,8 @@ class XCO():
         all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
         allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
 
+        print(allWavFileNames)
+
         #-------------------------------- 
         params_dict = {
             "sampling_frequency" : target_sampl_freq,
@@ -440,66 +442,71 @@ class XCO():
             pickle.dump(params_dict, f)
 
         # loop over wav files 
-        for wavFileName in  allWavFileNames:  
+        for wavFileName in allWavFileNames: 
+            print(wavFileName)
+            try:
+
+                # open wav file and get meta-information 
+                waveFile = wave.open(wavFileName, 'r')
+                myFs = waveFile.getframerate()
+                totNsam = waveFile.getnframes()
+                totDurFile_s = totNsam / myFs
+                nchannels = waveFile.getnchannels()    
+                sampwidth = waveFile.getsampwidth()
+                waveFile.close()
                 
-            # open wav file and get meta-information 
-            waveFile = wave.open(wavFileName, 'r')
-            myFs = waveFile.getframerate()
-            totNsam = waveFile.getnframes()
-            totDurFile_s = totNsam / myFs
-            nchannels = waveFile.getnchannels()    
-            sampwidth = waveFile.getsampwidth()
-            waveFile.close()
+                # make sure fs is correct 
+                if myFs != target_sampl_freq:
+                    print("myFs not equal to target_sampl_freq !!!")
+                    continue
+                
+                totNbSegments = int(totDurFile_s / duratSec)
+
+                # loop over segments within file     
+                for ii in  np.arange(0, (totNbSegments - 0.99), seg_step_size)   :
+                    # print(ii)
+                    try:
+                        startSec = ii*duratSec
+                        sig = read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
+                        # de-mean
+                        sig = sig - sig.mean() 
+                        # compute spectrogram
+                        _, _, X = sgn.spectrogram(x = sig, 
+                            fs = myFs, 
+                            window = 'hamming', 
+                            nperseg = win_siz, 
+                            noverlap = win_olap, 
+                            detrend = 'constant', 
+                            return_onesided = True, 
+                            scaling = 'spectrum', 
+                            mode = 'psd')
+                        # transpose and log 
+                        X = np.flip(X, axis=0) # so that hifg freqs at to of image 
+                        # equalize 
+                        X = sound.median_equalizer(X) 
+                        X = X.transpose()
+                        X = np.log10(X)
+                        # save image as PNG 
+                        arr = X.T
+                        # print(arr.shape)
+                        # normalize 
+                        arr = arr - arr.min()
+                        arr = arr/arr.max()
+                        # color map             
+                        map_val = colormap
+                        cm = plt.get_cmap(map_val)
+                        colored_image = cm(arr)
+                        im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
+                        # save as image 
+                        image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
+                        im.save(image_save_path)
+                    except:
+                        print("shit")
+            except:
+                print("super shit")
+
             
-            # make sure fs is correct 
-            if myFs != target_sampl_freq:
-                print("myFs not equal to target_sampl_freq !!!")
-                continue
-            
-            totNbSegments = int(totDurFile_s / duratSec)
-
-            # loop over segments within file     
-            for ii in  np.arange(0, (totNbSegments - 0.99), seg_step_size)   :
-                print(ii)
-                startSec = ii*duratSec
-                sig = read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
-                # de-mean
-                sig = sig - sig.mean() 
-                # compute spectrogram
-                _, _, X = sgn.spectrogram(x = sig, 
-                    fs = myFs, 
-                    window = 'hamming', 
-                    nperseg = win_siz, 
-                    noverlap = win_olap, 
-                    detrend = 'constant', 
-                    return_onesided = True, 
-                    scaling = 'spectrum', 
-                    mode = 'psd')
-                # transpose and log 
-                X = np.flip(X, axis=0) # so that hifg freqs at to of image 
-
-                # equalize 
-                X = sound.median_equalizer(X) 
-
-                X = X.transpose()
-                X = np.log10(X)
-
-                # save image as PNG 
-                arr = X.T
-                print(arr.shape)
-                # normalize 
-                arr = arr - arr.min()
-                arr = arr/arr.max()
-                # color map             
-                map_val = colormap
-                cm = plt.get_cmap(map_val)
-                colored_image = cm(arr)
-                im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
-                # save as image 
-                image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
-                im.save(image_save_path)
-        return(arr.shape)
-              
+                
 
 
 
