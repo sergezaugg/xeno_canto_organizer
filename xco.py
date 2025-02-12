@@ -126,8 +126,7 @@ class XCO():
         return(x)
 
     def make_param(self):
-        """  """
-
+        """ create a template download_params file """
         dl_params = {
             "min_duration_s" : 5,
             "max_duration_s" : 15,
@@ -145,29 +144,6 @@ class XCO():
                 ]
             }
         
-
-        # dl_params = {
-        #     "min_duration_s" : 5,
-        #     "max_duration_s" : 20,
-        #     "quality" : ["A", "B"],
-        #     "exclude_nd" : True,
-        #     "country" :[
-        #         "Switzerland",
-        #         "Germany",
-        #         "France"
-        #         ],      
-        #     "species" :[
-        #         "Corvus corax", 
-        #         "Cyanistes caeruleus",
-        #         "Parus major",
-        #         "Poecile montanus", 
-        #         "Aegithalos caudatus",
-        #         "Lophophanes cristatus",
-        #         "Periparus ater",
-        #         "Poecile palustris",
-        #         ]
-        #     }
-
         with open(os.path.join(self.start_path, 'download_params.json'), 'w') as f:
             json.dump(dl_params, f,  indent=4)
 
@@ -212,34 +188,23 @@ class XCO():
 
 
 
-    # main function to download mp3 from XC, or just get a summary
-    def get(self, params_json, params_download = False):
+    def get(self, params_json, download = False):
+        """ 
+        Main function to download mp3 from XC, or just get a summary
+        """
 
         main_download_path = os.path.join(self.start_path)
-
         if not os.path.exists(main_download_path):
             os.mkdir(main_download_path)
-
-        # get all metadata from already downloaded files 
-        pkls_li = [a for a  in os.listdir(main_download_path) if a.endswith('_meta.pkl')]
-        df_meta = []
-        if len(pkls_li) > 0:
-            df_meta = pd.concat( [pd.read_pickle(os.path.join(main_download_path,a)) for a in pkls_li] )
-            df_meta = df_meta['id'].tolist()
-
-
 
         # load parameters from json file 
         with open(os.path.join(self.start_path, params_json)) as f:
             dl_params = json.load(f)
 
-
-
         # retrieve meta data from XC web and select candidate files to be downloaded
         print("") 
         print("*******************************") 
-        print("Retrieving meta-data from xc and apply selection filters ...")
-        n_excl = 0
+        print("Retrieving meta-data from xc ...")
         recs_pool = []
         for cnt in dl_params['country']:
             cnt_str = '+cnt:' + cnt
@@ -257,16 +222,10 @@ class XCO():
                     recs = [a for a in recs if not 'nd' in a['lic'].lower()]
                 # select based on quality rating of recordings
                 recs = [a for a in recs if a['q'] in dl_params['quality']]
-                # exclude recordings that were already downloaded             
-                before_exclusion = len(recs)
-                recs = [a for a in recs if a['id'] not in df_meta]
-                n_excluded = before_exclusion - len(recs)
-                n_excl += n_excluded
                 # get meta-data as df from jsom 
                 _ = [a.pop('sono') for a in recs]
 
                 # replace "";"" by empty string in all values (needed for later export as csv)
-                # print(recs)
                 self.recs = recs
                 if len(recs) > 0:
                     for l in range(len(recs)):
@@ -282,80 +241,69 @@ class XCO():
 
                 recs_pool.extend(recs)
 
-            
-
-            # recs_pool[6]['rmk']
-
         # final handling
-        print(n_excl, 'of the selected files available locally ...')
-        if (n_excl>0): print( "... they will not be downloaded again")
-        print("There are " + str(len(recs_pool)) + " files for download after applying the selection filters")
+        print("There are " + str(len(recs_pool)) + " files for download")
+        if len(recs_pool) <= 0:
+            return("selection criteria gave zero files to download")
         
-        if len(recs_pool) > 0:
-            df_all = pd.DataFrame(recs_pool)
-            if params_download:
-                print("Writing meta-information to pkl ...") 
-                # Create time-stamped directory where files will be downloaded
-                source_path = os.path.join(main_download_path, self.download_tag + '_orig')
-                if not os.path.exists(source_path):
-                    os.mkdir(source_path)
-                # # make a copy of parameter file and meta information
-                # with open(os.path.join(main_download_path, self.download_tag + '_params.json'), 'w') as fp:
-                #     json.dump(dl_params, fp,  indent=4)
-    
-                # download 
-                print("Downloading files ...")
-                for re_i in recs_pool:
-                    # re_i["also"] = ' + '.join(re_i["also"])
-                    # full_download_string = 'http:' + re_i["file"]
-                    full_download_string = re_i["file"]
-                    # actually download files 
-                    r = requests.get(full_download_string, allow_redirects=True)
-                    # simplify filename stem 
-                    finam2 = re_i["file-name"].replace('.mp3', '')
-                    finam2 = unidecode.unidecode(finam2)
-                    finam2 = finam2.replace(' ', '_').replace('-', '_')
-                    finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
-                    tag =  re_i['gen'] + "_" + re_i['sp'] + '_'
-                    finam2 = tag + finam2
-                    # write file to disc
-                    open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
-                    # keep track of simplified name
-                    re_i['downloaded_to_path'] = source_path
-                    re_i['downloaded_to_file_stem'] = finam2
-                df_all_extended = pd.DataFrame(recs_pool)
-                df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
-                df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
-                df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
-                
-            print("")
-            print("Details:")
-            df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
-            print(pd.crosstab(df_all['full_spec_name'], df_all['cnt'], margins=True, dropna=False))
-            print("")
-            print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True, dropna=False))
-            print("")
-            print(df_all['lic'].value_counts())
+        # if lenth of recs_pool is > 0
+        df_all = pd.DataFrame(recs_pool)
+        if download:
+            print("Writing meta-information to pkl ...") 
+            # Create time-stamped directory where files will be downloaded
+            source_path = os.path.join(main_download_path, self.download_tag + '_orig')
+            if not os.path.exists(source_path):
+                os.mkdir(source_path)
+        
+            # download 
+            print("Downloading files ...")
+            for re_i in recs_pool:
+                # re_i["also"] = ' + '.join(re_i["also"])
+                # full_download_string = 'http:' + re_i["file"]
+                full_download_string = re_i["file"]
+                # actually download files 
+                r = requests.get(full_download_string, allow_redirects=True)
+                # simplify filename stem 
+                finam2 = re_i["file-name"].replace('.mp3', '')
+                finam2 = unidecode.unidecode(finam2)
+                finam2 = finam2.replace(' ', '_').replace('-', '_')
+                finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
+                tag =  re_i['gen'] + "_" + re_i['sp'] + '_'
+                finam2 = tag + finam2
+                # write file to disc
+                open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
+                # keep track of simplified name
+                re_i['downloaded_to_path'] = source_path
+                re_i['downloaded_to_file_stem'] = finam2
+            df_all_extended = pd.DataFrame(recs_pool)
+            df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
+            df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
+            df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
 
+        # finally, print some summaries     
+        print("")
+        print("Details:")
+        df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
+        print(pd.crosstab(df_all['full_spec_name'], df_all['cnt'], margins=True, dropna=False))
+        print("")
+        print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True, dropna=False))
+        print("")
+        print(df_all['lic'].value_counts())
         print("*******************************") 
         print("") 
 
 
 
-# self.download_tag
-
-    def mp3_to_wav(self, params_fs):
+    def mp3_to_wav(self, target_fs):
         """   
-        Convert mp3 to wav, this is a wrapper around ffmpeg.
-        Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
+        Convert mp3 to wav, this is 
+        Looks for files ending in .mp3 and attempt to convert them to wav
+        target_fs : resample fs 
         """
-        
-        self.params_fs = params_fs
-        # 
         all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
         thedir = [a for a in all_dirs if "_orig" in a and self.download_tag in a][0]
         path_source = os.path.join(self.start_path, thedir)
-        path_destin = os.path.join(self.start_path, thedir.replace('_orig','_wav_' + str(self.params_fs) + 'sps'))
+        path_destin = os.path.join(self.start_path, thedir.replace('_orig','_wav_' + str(target_fs) + 'sps'))
         if not os.path.exists(path_destin):
             os.mkdir(path_destin)
         all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
@@ -365,41 +313,32 @@ class XCO():
             patin = os.path.join(path_source, finam)
             paout = os.path.join(path_destin, finam.replace('.mp3','.wav' ))
             # only convert if wav file does not yet exist 
-            if not os.path.exists(paout):
-                # convert mp3 to wav by call to ffmpeg
-                try:
-
-                    # subprocess.call(['ffmpeg', 
-                    #     '-y', # -y overwrite without asking 
-                    #     '-i', patin, # '-i' # infile must be specifitd after -i
-                    #     '-ar', str(self.params_fs), # -ar rate set audio sampling rate (in Hz)
-                    #     '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
-                    #     paout
-                    #     ])
-       
-                    # convert from mp3 to wave (saves a temporary wave file)
-                    with open(patin, 'rb') as read_file, open(paout, 'wb') as write_file:
-                        decoder = mp3.Decoder(read_file)
-                        sample_rate = decoder.get_sample_rate()
-                        nchannels = decoder.get_channels()
-                        wav_file = Wave_write(write_file)
-                        wav_file.setnchannels(nchannels)
-                        wav_file.setsampwidth(2)
-                        wav_file.setframerate(sample_rate)
-                        while True:
-                            pcm_data = decoder.read()
-                            if not pcm_data:
-                                break
-                            else:
-                                wav_file.writeframes(pcm_data)
-
-                        # convert to mono an adjust fs, overwrite existin wave!
-                        wav_to_mono_convert_fs(f = paout, f_out = paout, fs_new = self.params_fs)
-
-                except:
-                    print("An exception occured!")
-        # params = {'new_fs': params_fs, 'bbb': 333}            
-        # return(params)            
+            if os.path.exists(paout):
+                continue
+            # convert mp3 to wav 
+            try:
+                # convert from mp3 to wave (saves a temporary wave file)
+                with open(patin, 'rb') as read_file, open(paout, 'wb') as write_file:
+                    decoder = mp3.Decoder(read_file)
+                    sample_rate = decoder.get_sample_rate()
+                    nchannels = decoder.get_channels()
+                    wav_file = Wave_write(write_file)
+                    wav_file.setnchannels(nchannels)
+                    wav_file.setsampwidth(2)
+                    wav_file.setframerate(sample_rate)
+                    # while True:
+                    #     pcm_data = decoder.read()
+                    #     if not pcm_data:
+                    #         break
+                    #     else:
+                    #         wav_file.writeframes(pcm_data)
+                    pcm_data = decoder.read()
+                    wav_file.writeframes(pcm_data)
+                    # convert to mono an adjust fs, overwrite existin wave!
+                    wav_to_mono_convert_fs(f = paout, f_out = paout, fs_new = target_fs)
+            except:
+                print("mp3-to-wav convsersion failed!")
+         
 
 
 
