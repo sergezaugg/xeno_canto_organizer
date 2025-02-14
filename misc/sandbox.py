@@ -94,3 +94,17 @@ wav_to_mono_convert_fs(f = pa_wav_in, f_out = pa_wav_out, fs_new = 4000)
 
 
 
+
+
+# from skimage import filters
+# import maad  
+# from  maad import sound
+
+# print(">>>>>>>>>>>", X.shape)
+# X = sound.median_equalizer(X)
+# print(">>>>>>>>>>>", X.shape)
+
+
+# # new 
+# X_mea = filters.gaussian(X, sigma=45, mode='nearest', cval=0, preserve_range=False, truncate=4.0)
+# X = X - X_mea

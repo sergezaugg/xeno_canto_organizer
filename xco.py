@@ -1,7 +1,7 @@
-"""
-Created 20231203
-Author: Serge Zaugg
-"""
+# """
+# Created 20231203
+# Author: Serge Zaugg
+# """
 
 import os
 import re
@@ -11,106 +11,14 @@ import pandas as pd
 import unidecode
 import datetime 
 import numpy as np 
-import soundfile as sf
 import wave
-from wave import Wave_write
 import pickle
 import scipy.signal as sgn 
-from scipy.io.wavfile import write
 import matplotlib.pyplot as plt  
 from PIL import Image
 import struct
-import mp3
 from  maad import sound
 import subprocess
-
-
-
-def read_piece_of_wav(f, start_sec, durat_sec, fs, n_ch, sampwidth):
-    """ 
-    f = wav file name 
-    """
-    # read wav 
-    wave_file = wave.open(f, 'r')
-    wave_file.setpos(int(fs*start_sec)) 
-    Nread = int(fs*durat_sec)
-    sig_byte = wave_file.readframes(Nread) #read the all the samples from the file into a byte string
-    wave_file.close()
-    # convert bytes to a np-array 
-    # struct.unpack(fmt, string)
-    # h : int16 signed
-    # H : int16 unsigned
-    # i : int32 signed
-    # I : int32 unsigned
-    if sampwidth == 2 :
-        unpstr = '<{0}h'.format(Nread*n_ch) # < = little-endian h = 2 bytes ,16-bit 
-    else:
-        raise ValueError("Not a 16 bit signed interger audio formats.")
-    # convert byte string into a list of ints
-    sig = (struct.unpack(unpstr, sig_byte)) 
-    sig = np.array(sig, dtype=float)
-    # convert from int to float
-    sig = sig / ((2**(sampwidth*8))/2)
-    # return 
-    return(sig)
-
-
-
-
-def wav_to_mono_convert_fs(f, f_out, fs_new):
-    """ 
-    read wave file f, convert to mono, re-sample and save a wave in f_out 
-    """
-    # read wav 
-    wave_file = wave.open(f, 'r')
-    n_ch = wave_file.getnchannels()
-    print('n_ch', n_ch)
-    sampwidth = wave_file.getsampwidth()
-    print('orig fs', wave_file.getframerate())
-    wave_file.setpos(int(0)) 
-    Nread = int(wave_file.getnframes())
-    sig_byte = wave_file.readframes(Nread) #read the all the samples from the file into a byte string
-    wave_file.close()
-    # convert bytes to a np-array 
-    # struct.unpack(fmt, string)
-    # h : int16 signed
-    # H : int16 unsigned
-    # i : int32 signed
-    # I : int32 unsigned
-    if sampwidth == 2 :
-        unpstr = '<{0}h'.format(Nread*n_ch) # < = little-endian h = 2 bytes ,16-bit 
-    else:
-        raise ValueError("Not a 16 bit signed interger audio formats.")
-    # convert byte string into a list of ints
-    sig = (struct.unpack(unpstr, sig_byte)) 
-    sig = np.array(sig, dtype=float)
-    # convert from int to float
-    # sig = sig / ((2**(sampwidth*8))/2)
-
-    # take only first channel 
-    sig = sig[0::n_ch]
-
-    # resample to adjust fs
-    sampling_rate = wave_file.getframerate()
-    number_of_samples = round(len(sig) * float(fs_new) / sampling_rate)
-    sig = sgn.resample(sig, number_of_samples)
-
-    # signal as numpy integer array 
-    sig = sig.astype('int16')
-    # save to file in wav format
-    write(filename = f_out, rate = fs_new, data = sig)
-    # return 
-    return("converted")
-
-# pa_wav_in = "C:/Users/sezau/Desktop/project01/downloads/20250104T110600_orig/zzz.wav"
-# pa_wav_out = "C:/Users/sezau/Desktop/project01/downloads/20250104T110600_orig/zzz_002.wav"
-# wav_to_mono_convert_fs(f = pa_wav_in, f_out = pa_wav_out, fs_new = 4000)
-
-
-
-
-
-
 
 class XCO():
 
@@ -126,8 +34,10 @@ class XCO():
         x = int(x[0])*60 + int(x[1])
         return(x)
 
-    def make_param(self):
-        """ create a template download_params file """
+    def make_param(self, filename = 'download_params.json'):
+        """ 
+        create a template download_params file 
+        """
         dl_params = {
             "min_duration_s" : 5,
             "max_duration_s" : 15,
@@ -145,8 +55,37 @@ class XCO():
                 ]
             }
         
-        with open(os.path.join(self.start_path, 'download_params.json'), 'w') as f:
+        with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
+
+    def read_piece_of_wav(self, f, start_sec, durat_sec, fs, n_ch, sampwidth):
+        """ 
+        f = wav file name 
+        """
+        # read wav 
+        wave_file = wave.open(f, 'r')
+        wave_file.setpos(int(fs*start_sec)) 
+        Nread = int(fs*durat_sec)
+        sig_byte = wave_file.readframes(Nread) #read the all the samples from the file into a byte string
+        wave_file.close()
+        # convert bytes to a np-array 
+        # struct.unpack(fmt, string)
+        # h : int16 signed
+        # H : int16 unsigned
+        # i : int32 signed
+        # I : int32 unsigned
+        if sampwidth == 2 :
+            unpstr = '<{0}h'.format(Nread*n_ch) # < = little-endian h = 2 bytes ,16-bit 
+        else:
+            raise ValueError("Not a 16 bit signed interger audio formats.")
+        # convert byte string into a list of ints
+        sig = (struct.unpack(unpstr, sig_byte)) 
+        sig = np.array(sig, dtype=float)
+        # convert from int to float
+        sig = sig / ((2**(sampwidth*8))/2)
+        # return 
+        return(sig)
+
 
 
     def summary(self, save_csv = True):
@@ -398,7 +337,7 @@ class XCO():
                     # print(ii)
                     try:
                         startSec = ii*duratSec
-                        sig = read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
+                        sig = self.read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
                         # de-mean
                         sig = sig - sig.mean() 
                         # compute spectrogram
@@ -446,19 +385,6 @@ class XCO():
 
 
 
-
-# from skimage import filters
-# import maad  
-# from  maad import sound
-
-# print(">>>>>>>>>>>", X.shape)
-# X = sound.median_equalizer(X)
-# print(">>>>>>>>>>>", X.shape)
-
-
-# # new 
-# X_mea = filters.gaussian(X, sigma=45, mode='nearest', cval=0, preserve_range=False, truncate=4.0)
-# X = X - X_mea
 
 
 

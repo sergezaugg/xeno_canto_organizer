@@ -30,7 +30,6 @@ ffmpg
 https://ffmpeg.org/
 
 
-pip install pymp3
 
 
 
