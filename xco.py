@@ -22,6 +22,7 @@ from PIL import Image
 import struct
 import mp3
 from  maad import sound
+import subprocess
 
 
 
@@ -294,50 +295,41 @@ class XCO():
 
 
 
-    def mp3_to_wav(self, target_fs):
-        """   
-        Convert mp3 to wav, this is 
-        Looks for files ending in .mp3 and attempt to convert them to wav
-        target_fs : resample fs 
-        """
-        all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
-        thedir = [a for a in all_dirs if "_orig" in a and self.download_tag in a][0]
-        path_source = os.path.join(self.start_path, thedir)
-        path_destin = os.path.join(self.start_path, thedir.replace('_orig','_wav_' + str(target_fs) + 'sps'))
-        if not os.path.exists(path_destin):
-            os.mkdir(path_destin)
-        all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
 
-        for finam in all_mp3s:
-            print(finam)
-            patin = os.path.join(path_source, finam)
-            paout = os.path.join(path_destin, finam.replace('.mp3','.wav' ))
-            # only convert if wav file does not yet exist 
-            if os.path.exists(paout):
-                continue
-            # convert mp3 to wav 
-            try:
-                # convert from mp3 to wave (saves a temporary wave file)
-                with open(patin, 'rb') as read_file, open(paout, 'wb') as write_file:
-                    decoder = mp3.Decoder(read_file)
-                    sample_rate = decoder.get_sample_rate()
-                    nchannels = decoder.get_channels()
-                    wav_file = Wave_write(write_file)
-                    wav_file.setnchannels(nchannels)
-                    wav_file.setsampwidth(2)
-                    wav_file.setframerate(sample_rate)
-                    # while True:
-                    #     pcm_data = decoder.read()
-                    #     if not pcm_data:
-                    #         break
-                    #     else:
-                    #         wav_file.writeframes(pcm_data)
-                    pcm_data = decoder.read()
-                    wav_file.writeframes(pcm_data)
-                    # convert to mono an adjust fs, overwrite existin wave!
-                    wav_to_mono_convert_fs(f = paout, f_out = paout, fs_new = target_fs)
-            except:
-                print("mp3-to-wav convsersion failed!")
+    def mp3_to_wav(self, target_fs):
+            """   
+            Convert mp3 to wav, this is a wrapper around ffmpeg.
+            Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
+            """
+            all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
+            thedir = [a for a in all_dirs if "_orig" in a and self.download_tag in a][0]
+            path_source = os.path.join(self.start_path, thedir)
+            path_destin = os.path.join(self.start_path, thedir.replace('_orig','_wav_' + str(target_fs) + 'sps'))
+            if not os.path.exists(path_destin):
+                os.mkdir(path_destin)
+            all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
+
+            for finam in all_mp3s:
+                print(finam)
+                patin = os.path.join(path_source, finam)
+                paout = os.path.join(path_destin, finam.replace('.mp3','.wav' ))
+                # only convert if wav file does not yet exist 
+                if not os.path.exists(paout):
+                    # convert mp3 to wav by call to ffmpeg
+                    try:
+                        subprocess.call(['ffmpeg', 
+                            '-y', # -y overwrite without asking 
+                            '-i', patin, # '-i' # infile must be specifitd after -i
+                            '-ar', str(target_fs), # -ar rate set audio sampling rate (in Hz)
+                            '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
+                            paout
+                            ])
+                    except:
+                        print("An exception occured!")
+
+
+
+   
          
 
 
