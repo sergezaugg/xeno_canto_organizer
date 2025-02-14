@@ -6,21 +6,12 @@ The tool is meant for incrementally adding consistently with previously used dat
 
 ## Summary
 - check summaries before download (e.g. typos in species name, licences)
-- incremetaly download more and more data 
-- lightweigh meta-data format easy to postprocess with python
+- lightweight meta-data format easy to postprocess with python
 - explicit selection of mp3 file duration and licence
-- nested dirs with basic conversion (mp3 tp wav, resample, add noise to remove mp3 artefacts)
-- rename files as pure alphanumeric
+- nested dirs with basic conversion (mp3 tp wav, resample)
+
 
 ## Usage
-- recomendation: Make a Python venv first 
-- Linux or Windows Powershell
-```bash
-# see main.py
-```
-
-
-
 
 ## Installation
 
@@ -28,11 +19,6 @@ The tool is meant for incrementally adding consistently with previously used dat
 ffmpg
 
 https://ffmpeg.org/
-
-
-
-
-
 
 ## Python dependencies
 tbd
