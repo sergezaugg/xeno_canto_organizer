@@ -19,12 +19,17 @@ from PIL import Image
 import struct
 from  maad import sound
 import subprocess
+import yaml
+
+
 
 class XCO():
 
     def __init__(self, start_path):
-        self.XC_API_URL = 'https://www.xeno-canto.org/api/2/recordings'
-        self.start_path = start_path # '/home/serge/sz_main/ml/data/xc_dev'
+        with open('./config.yaml') as f:
+            conf = yaml.safe_load(f)
+        self.XC_API_URL = conf['XC_API_URL']
+        self.start_path = start_path 
         self.download_tag = 'downloaded_data'  
 
     # helper functions 

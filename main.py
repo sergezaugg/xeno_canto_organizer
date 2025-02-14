@@ -22,15 +22,3 @@ xc.summary(save_csv = True)
 xc.mp3_to_wav(target_fs = 24000)
 # extract spectrograms 
 xc.extract_spectrograms(target_sampl_freq = 24000, duratSec = 0.5, win_siz = 256, win_olap = 128, seg_step_size = 0.5, colormap = 'viridis')
-
-xc.extract_spectrograms(target_sampl_freq = 24000, duratSec = 1.5, win_siz = 512, win_olap = 128, seg_step_size = 0.5, colormap = 'viridis')
-
-
-
-
-
-
-
-
-
-
