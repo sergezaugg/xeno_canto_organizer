@@ -17,19 +17,19 @@
 * Original file name (mp3) is used as stub in all other files (wav and png) for traceability
 
 ## Usage
-1. Make sure **ffmpg** and the Python packages mentioned above are installed 
+1. Make sure **ffmpg** and the Python packages are installed (see Dependencies and installation)
 2. Check **config.yaml** that the url to XC API is still valid
 3. Open **main.py** and run line-by-line at first to adjust the parameters
 4. Once **main.py** is ready, run **main.py**
 5. Result: metadata, mp3, wav, and spectrograms should be ready in their respective directories
 6. :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
 
-Preparation of data for an ML project can be handled with 7 lines python script
+Example of how preparation of data for an ML project can be handled with super-short Python script
 ```python
 # Import xco module
 import xco 
 # Make an instance of the XCO class and define the start path 
-xc = xco.XCO(start_path = 'C:/temp_xc_projects/proj04')
+xc = xco.XCO(start_path = '<path to the project dir>')
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json')
 # Get information of what would be downloaded
