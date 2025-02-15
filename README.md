@@ -8,7 +8,6 @@
 * It includes data segmentation and feature extraction as spectrograms
 * :construction: The tool is still under development :construction:
 
-
 ## Features
 * Check summaries before actual download
 * Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
@@ -16,9 +15,6 @@
 * Spectrogram parameters can be flexibly adjusted, eg. short or long spectrograms can be taken, FFT params can be set
 * Spectrogram are stored as PNG images which allows easy exploration and swift integration with established CNNs
 * Original file name (mp3) is used as stub in all other files (wav and png) for traceability
-
-
-`
 
 ## Usage
 1. Make sure **ffmpg** and the Python packages mentioned above are installed 
@@ -28,9 +24,8 @@
 5. Result: metadata, mp3, wav, and spectrograms should be ready in their respective directories
 6. :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
 
-
 Preparation of data for an ML project can be handled with 7 lines python script
-```Python
+```python
 # Import xco module
 import xco 
 # Make an instance of the XCO class and define the start path 
@@ -60,13 +55,11 @@ xc.extract_spectrograms(target_sampl_freq = 24000, duratSec = 0.5, win_siz = 256
 
 ![](./images/spectros_01.png)  
 
-
 ## Why save spectrogram of sounds as PNG images ?
 * Yes, for people working in acoustics this is a bit irritating
 * However, it is handy because many PyTorch models and data augmentation procedures can directly ingest PNGs
 * However, it is handy because images can be easily visualized with standard software
 * Export as binary numpy files is planned but not yet available.
-
 
 ## Dependencies and installation
 * This code will download data from the XC API https://www.xeno-canto.org/api/2/recordings
@@ -75,8 +68,7 @@ xc.extract_spectrograms(target_sampl_freq = 24000, duratSec = 0.5, win_siz = 256
 * Make a fresh venv and install the python packages 
 ```
 pip install -r requirements.txt
-``
-
+```
 
 ## Useful links
 * https://creativecommons.org/licenses/
