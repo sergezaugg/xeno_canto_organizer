@@ -291,7 +291,7 @@ class XCO():
 
 
 
-    def extract_spectrograms(self, target_fs, segm_duration, seg_step_size = 1.0, win_siz = 256, win_olap = 128,  equalize = True, colormap = 'viridis'):
+    def extract_spectrograms(self, target_fs, segm_duration, seg_step_size = 1.0, win_siz = 256, win_olap = 128,  equalize = True, colormap = 'gray'):
         """
         Description : Process wav file by segments, for each segment makes a spectrogram, and saves a PNG
         Arguments : 
@@ -301,7 +301,10 @@ class XCO():
             win_siz (int) : Size in nb of bins of the FFT window used to compute the short-time fourier transform
             win_olap (int) : Size in nb of bins of the FFT window overlap
             equalize (Boolean) : Set True to apply equalization (suppresses stationary background noise), else set to False
-            colormap (str) : Mapping from grayscale to 3-channel color image. (e.g. 'viridis', 'inferno', 'magma', 'inferno', 'plasma', 'twilight'.  see plt.colormaps())
+            colormap (str) : 
+                Set to 'gray' to write one-channel images (default)
+                Other strings will map spectrogram to 3-channel color images e.g. 'viridis', 'inferno', 'magma', 'inferno', 'plasma', 'twilight' 
+                For full list see see plt.colormaps()
         Returns : PNG images are saved to disc
         """
 
@@ -376,10 +379,14 @@ class XCO():
                         # normalize 
                         X = X - X.min()
                         X = X/X.max()
-                        # apply color map             
-                        cm = plt.get_cmap(colormap)
-                        colored_image = cm(X)
-                        im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
+                        # facultatively apply color map  
+                        if colormap == "gray":
+                            im = Image.fromarray((X[:, :] * 255).astype(np.uint8))
+                        else:           
+                            cm = plt.get_cmap(colormap)
+                            colored_image = cm(X)
+                            im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
+                        print("PIL image size: ", im.size, im.mode)
                         # save as image 
                         image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
                         im.save(image_save_path)
@@ -395,6 +402,10 @@ class XCO():
 # devel code - supress execution if this is imported as module 
 if __name__ == "__main__":
     print("Hi V, you passed beyond the blackwall, you are in the dev space")
+
+
+    plt.colormaps()
+    
 
     xc = XCO(start_path = 'C:/temp_xc_projects/proj04')
 
@@ -425,3 +436,26 @@ if __name__ == "__main__":
     # Arguments : bbb
     # Returns : ccc
     # """
+
+
+'gray'
+
+#     ['magma', 'inferno', 'plasma', 'viridis', 'cividis', 'twilight', 'twilight_shifted', 'turbo', 'berlin', 'managua', 
+#      'vanimo', 'Blues', 'BrBG', 'BuGn', 'BuPu', 'CMRmap', 'GnBu', 'Greens', 'Greys', 'OrRd', 'Oranges', 'PRGn', 
+#      'PiYG', 'PuBu', 'PuBuGn', 'PuOr', 'PuRd', 'Purples', 'RdBu', 'RdGy', 'RdPu', 'RdYlBu', 'RdYlGn', 'Reds', 
+#      'Spectral', 'Wistia', 'YlGn', 'YlGnBu', 'YlOrBr', 'YlOrRd', 'afmhot', 'autumn', 'binary', 'bone', 'brg', 
+#      'bwr', 'cool', 'coolwarm', 'copper', 'cubehelix', 'flag', 'gist_earth', 'gist_gray', 'gist_heat', 
+#      'gist_ncar', 'gist_rainbow', 'gist_stern', 'gist_yarg', 'gnuplot', 'gnuplot2', , 'hot', 'hsv', 
+#      'jet', 'nipy_spectral', 'ocean', 'pink', 'prism', 'rainbow', 'seismic', 'spring', 'summer', 'terrain', 
+#      'winter', 'Accent', 'Dark2', 'Paired', 'Pastel1', 'Pastel2', 'Set1', 'Set2', 'Set3', 'tab10', 'tab20', 
+#      'tab20b', 'tab20c', 'grey', 'gist_grey', 'gist_yerg', 'Grays', 'magma_r', 'inferno_r', 'plasma_r', 'viridis_r', 
+#      'cividis_r', 'twilight_r', 'twilight_shifted_r', 'turbo_r', 'berlin_r', 'managua_r', 'vanimo_r', 'Blues_r', 'BrBG_r', 
+#      'BuGn_r', 'BuPu_r', 'CMRmap_r', 'GnBu_r', 'Greens_r', 'Greys_r', 'OrRd_r', 'Oranges_r', 'PRGn_r', 'PiYG_r', 'PuBu_r', 
+#      'PuBuGn_r', 'PuOr_r', 'PuRd_r', 'Purples_r', 'RdBu_r', 'RdGy_r', 'RdPu_r', 'RdYlBu_r', 'RdYlGn_r', 'Reds_r', 'Spectral_r', 
+#      'Wistia_r', 'YlGn_r', 'YlGnBu_r', 'YlOrBr_r', 'YlOrRd_r', 'afmhot_r', 'autumn_r', 'binary_r', 'bone_r', 'brg_r', 'bwr_r', 
+#      'cool_r', 'coolwarm_r', 'copper_r', 'cubehelix_r', 'flag_r', 'gist_earth_r', 'gist_gray_r', 'gist_heat_r', 'gist_ncar_r', 
+#      'gist_rainbow_r', 'gist_stern_r', 'gist_yarg_r', 'gnuplot_r', 'gnuplot2_r', 'gray_r', 'hot_r', 'hsv_r', 'jet_r', 'nipy_spectral_r', 
+#      'ocean_r', 'pink_r', 'prism_r', 'rainbow_r', 'seismic_r', 'spring_r', 'summer_r', 'terrain_r', 'winter_r', 'Accent_r', 'Dark2_r', 
+#      'Paired_r', 'Pastel1_r', 'Pastel2_r', 'Set1_r', 'Set2_r', 'Set3_r', 'tab10_r', 'tab20_r', 'tab20b_r', 'tab20c_r', 'grey_r', 
+#      'gist_grey_r', 'gist_yerg_r', 'Grays_r']
+# >>>
