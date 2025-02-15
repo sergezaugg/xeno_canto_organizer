@@ -4,6 +4,7 @@
 *   keep trak of process with a timestamps
 *   implement unit tests
 *   make equalization optional 
+*   keep track of frequency and time axes 
 
 
 pip freeze > requirements.txt 
