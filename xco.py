@@ -386,7 +386,7 @@ class XCO():
                             cm = plt.get_cmap(colormap)
                             colored_image = cm(X)
                             im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
-                        print("PIL image size: ", im.size, im.mode)
+                        # print("PIL image size: ", im.size, im.mode)
                         # save as image 
                         image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
                         im.save(image_save_path)
