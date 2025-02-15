@@ -19,7 +19,7 @@ pip install pyyaml
 pip install matplotlib
 
 
-
+git tag -a v0.9.0 -m "First preliminary working version, still needs clean-up and additional functionality"
 
 
 
