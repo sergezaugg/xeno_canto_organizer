@@ -1,6 +1,6 @@
 # """
 # Created 20231203
-# Author: Serge Zaugg
+# Author : Serge Zaugg
 # """
 
 import os
@@ -20,8 +20,6 @@ import struct
 from  maad import sound
 import subprocess
 import yaml
-
-
 
 # import maad
 # maad.sound.median_equalizer
@@ -321,7 +319,7 @@ class XCO():
         allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
         # print(allWavFileNames)
 
-        #-------------------------------- 
+        # save parameters for later traceability
         params_dict = {
             "sampling_frequency" : target_fs,
             "segment_duration_sec" : segm_duration,
@@ -358,8 +356,7 @@ class XCO():
                     try:
                         startSec = ii*segm_duration
                         sig = self._read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = segm_duration)
-                        # de-mean
-                        sig = sig - sig.mean() 
+                        sig = sig - sig.mean() # de-mean
                         # compute spectrogram
                         _, _, X = sgn.spectrogram(
                             x = sig, 
