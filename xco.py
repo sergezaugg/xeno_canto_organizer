@@ -21,6 +21,11 @@ from  maad import sound
 import subprocess
 import yaml
 
+""" 
+Description : aaa
+Arguments : bbb
+Returns : ccc
+"""
 
 
 class XCO():
@@ -41,7 +46,10 @@ class XCO():
 
     def make_param(self, filename = 'download_params.json'):
         """ 
-        create a template download_params file 
+        Description: Create a template download parameters file 
+        Arguments:
+            filename: (str), file name ending in .json
+        Returns: Writes a json file to disc
         """
         dl_params = {
             "min_duration_s" : 5,
@@ -59,16 +67,25 @@ class XCO():
                 "Corvus coronoides"
                 ]
             }
-        
         with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
 
-    def read_piece_of_wav(self, f, start_sec, durat_sec, fs, n_ch, sampwidth):
+    def read_piece_of_wav(self, f, start_sec, durat_sec): 
         """ 
-        f = wav file name 
+        Description : Reads a piece of a wav file 
+        Arguments :
+            f : (str), full path to a wav file 
+            start_sec : (float), time location in seconds where the piece to be extracted starts
+            durat_sec : (float), duration in seconds of the piece to be extracted 
+        Returns: A 1D numpy-array (float) containing the extracted piece of the waveform  
         """
         # read wav 
         wave_file = wave.open(f, 'r')
+        # extract metadata from wave file header
+        fs = wave_file.getframerate()
+        n_ch = wave_file.getnchannels()  
+        sampwidth = wave_file.getsampwidth()
+        # read bytes from the chunk of 
         wave_file.setpos(int(fs*start_sec)) 
         Nread = int(fs*durat_sec)
         sig_byte = wave_file.readframes(Nread) #read the all the samples from the file into a byte string
@@ -125,8 +142,8 @@ class XCO():
         df_summa.reset_index(inplace=True)
         # save to disc
         if save_csv:
-            df_summa.to_csv(os.path.join(self.start_path, 'summary_agg_' + timstamp + '.csv') )
-            df_summary.to_csv(   os.path.join(self.start_path, 'summary_' + timstamp + '.csv') )
+            df_summa.to_csv(os.path.join(self.start_path, 'summary_agg_' + '.csv') )
+            df_summary.to_csv(   os.path.join(self.start_path, 'summary_' + '.csv') )
         else:
             return(df_summary)
 
@@ -242,8 +259,10 @@ class XCO():
 
     def mp3_to_wav(self, target_fs):
             """   
-            Convert mp3 to wav, this is a wrapper around ffmpeg.
-            Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
+            Description : Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
+            Arguments :
+                target_fs : the sampling rate of the saved wav file  
+            Returns: Writes wav files to disc
             """
             all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
             thedir = [a for a in all_dirs if "_orig" in a and self.download_tag in a][0]
@@ -252,24 +271,21 @@ class XCO():
             if not os.path.exists(path_destin):
                 os.mkdir(path_destin)
             all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
-
+            # loop over mp3 file and convert to wav by call to ffmpeg
             for finam in all_mp3s:
-                print(finam)
+                # print(finam)
                 patin = os.path.join(path_source, finam)
                 paout = os.path.join(path_destin, finam.replace('.mp3','.wav' ))
-                # only convert if wav file does not yet exist 
-                if not os.path.exists(paout):
-                    # convert mp3 to wav by call to ffmpeg
-                    try:
-                        subprocess.call(['ffmpeg', 
-                            '-y', # -y overwrite without asking 
-                            '-i', patin, # '-i' # infile must be specifitd after -i
-                            '-ar', str(target_fs), # -ar rate set audio sampling rate (in Hz)
-                            '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
-                            paout
-                            ])
-                    except:
-                        print("An exception occured!")
+                try:
+                    subprocess.call(['ffmpeg', 
+                        '-y', # -y overwrite without asking 
+                        '-i', patin, # '-i' # infile must be specifitd after -i
+                        '-ar', str(target_fs), # -ar rate set audio sampling rate (in Hz)
+                        '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
+                        paout
+                        ])
+                except:
+                    print("An exception occured during mp3-to-wav conversion with ffmpeg!")
 
 
 
@@ -342,7 +358,7 @@ class XCO():
                     # print(ii)
                     try:
                         startSec = ii*duratSec
-                        sig = self.read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec, fs = myFs, n_ch = nchannels, sampwidth = sampwidth)
+                        sig = self.read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec)
                         # de-mean
                         sig = sig - sig.mean() 
                         # compute spectrogram
@@ -384,13 +400,26 @@ class XCO():
                 
 
 
+# devel code - supress execution if this is imported as module 
+if __name__ == "__main__":
+    print("Hi, you are in the dev space")
 
+    xc = XCO(start_path = 'C:/temp_xc_projects/proj04')
 
+    wavFileName = "C:/temp_xc_projects/proj04/downloaded_data_wav_24000sps/Corvus_coronoides_XC620107_2021_01_17_Corvus_coronoides2.wav"
 
+    # open wav file and get meta-information 
+    waveFile = wave.open(wavFileName, 'r')
+    myFs = waveFile.getframerate()
+    totNsam = waveFile.getnframes()
+    totDurFile_s = totNsam / myFs
+    nchannels = waveFile.getnchannels()    
+    sampwidth = waveFile.getsampwidth()
+    waveFile.close()
 
-
-
-
-
-
-
+    x_out = xc.read_piece_of_wav(f = wavFileName, 
+                         start_sec = 1.0, 
+                         durat_sec = 2.0, 
+                         )
+    type(x_out)
+    x_out.dtype

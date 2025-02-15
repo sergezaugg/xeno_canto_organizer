@@ -5,8 +5,8 @@
 import mp3
 from wave import Wave_write
 
-patin = "C:/Users/sezau/Desktop/project01/downloads/20250104T110600_orig/Corvus_corax_XC356384_Raven.mp3"
-paout = "C:/Users/sezau/Desktop/project01/downloads/20250104T110600_orig/zzz.wav"
+patin = "C:/xxxxxxxxxxxxx/Corvus_corax_XC356384_Raven.mp3"
+paout = "C:/xxxxxxxxxxxxx/zzz.wav"
 
 with open(patin, 'rb') as read_file, open(paout, 'wb') as write_file:
     decoder = mp3.Decoder(read_file)
@@ -81,8 +81,8 @@ def wav_to_mono_convert_fs(f, f_out, fs_new):
 
 # 
 
-pa_wav_in = "C:/Users/sezau/Desktop/project01/downloads/20250104T110600_orig/zzz.wav"
-pa_wav_out = "C:/Users/sezau/Desktop/project01/downloads/20250104T110600_orig/zzz_002.wav"
+pa_wav_in = "C:/xxxxxxxxxxxxx.wav"
+pa_wav_out = "C:/xxxxxxxxxxxxx.wav"
 
 wav_to_mono_convert_fs(f = pa_wav_in, f_out = pa_wav_out, fs_new = 4000)
 

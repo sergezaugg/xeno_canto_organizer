@@ -5,10 +5,11 @@
 
 import xco 
 
-# define root path 
-xc = xco.XCO(start_path = 'C:/Users/sezau/Desktop/proj04')
-# check 
+# define the root path 
+xc = xco.XCO(start_path = 'C:/temp_xc_projects/proj04')
+# check where data will be retrieved
 xc.XC_API_URL
+# check where data will be written 
 xc.start_path
 # create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json')
