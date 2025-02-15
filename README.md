@@ -1,17 +1,18 @@
 # Xeno-Canto organizer
-**A python class to download and organize Xeno-Canto audio files for machine learning projects.**
+**A python class to prepare Xeno-Canto audio files for machine learning projects**
 
-* Xeno-Canto (`https://www.xeno-canto.org/`) is a data treasure. 
-* But the raw mp3 files cannot be directly used in machine learning processes (feature extraction, train, test) because they first need to be prepared. 
-* This tool allows to download and organise XC data in a structured repository tree that can be directly accesed by your ML processes. 
+* Xeno-Canto (https://www.xeno-canto.org) is a data treasure for ecological, behavioral and acoustical research and applications. 
+* But ... the raw mp3 files cannot be directly used for machine learning because they first need to be prepared. 
+* This tool allows to download, prepare and organize XC data in a structured repository tree that can be directly accessed by ML processes.
+* It includes data segmentation and feature extraction as spectrograms
 
-## Summary
-* check summaries before download (e.g. typos in species name, licences)
-* lightweight meta-data format easy to postprocess with python
-* explicit selection of mp3 file duration and licence
+## Features
+* Check summaries before actual download
+* Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
+* Also stores meta-data in pkl easy to postprocess with python
 * Spectrogram parameters can be flexibly set, eg. very short spectrograms can be taken
-* nested dirs with basic conversion (mp3 tp wav)
-* spectrogram stored png which allows easy exploration
+* Spectrogram stored png which allows easy exploration
+* Original file name (mp3) is used as stub in all other files (wav and png) for traceability
 
 ## Illustration
 
