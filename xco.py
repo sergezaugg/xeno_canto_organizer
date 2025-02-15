@@ -21,14 +21,16 @@ from  maad import sound
 import subprocess
 import yaml
 
-""" 
-Description : aaa
-Arguments : bbb
-Returns : ccc
-"""
 
+
+# import maad
+# maad.sound.median_equalizer
+# type(aa)
 
 class XCO():
+
+    #----------------------------------
+    # (0) the init method
 
     def __init__(self, start_path):
         with open('./config.yaml') as f:
@@ -37,40 +39,16 @@ class XCO():
         self.start_path = start_path 
         self.download_tag = 'downloaded_data'  
 
-    # helper functions 
-    def __convsec(self, x):
+    #----------------------------------
+    # (1) helper functions
+    
+    def _convsec(self, x):
         """Convert 'mm:ss' (str) to seconds (int)"""
         x = x.split(':')
         x = int(x[0])*60 + int(x[1])
         return(x)
 
-    def make_param(self, filename = 'download_params.json'):
-        """ 
-        Description: Create a template download parameters file 
-        Arguments:
-            filename: (str), file name ending in .json
-        Returns: Writes a json file to disc
-        """
-        dl_params = {
-            "min_duration_s" : 5,
-            "max_duration_s" : 15,
-            "quality" : ["A", "B"],
-            "exclude_nd" : True,
-            "country" :[
-                "Switzerland",
-                "Mexico",
-                "Australia"
-                ],      
-            "species" :[
-                "Corvus corax", 
-                "Corvus sinaloae",
-                "Corvus coronoides"
-                ]
-            }
-        with open(os.path.join(self.start_path, filename), 'w') as f:
-            json.dump(dl_params, f,  indent=4)
-
-    def read_piece_of_wav(self, f, start_sec, durat_sec): 
+    def _read_piece_of_wav(self, f, start_sec, durat_sec): 
         """ 
         Description : Reads a piece of a wav file 
         Arguments :
@@ -109,6 +87,36 @@ class XCO():
         return(sig)
 
 
+    #----------------------------------
+    # (2) main methods 
+
+    def make_param(self, filename = 'download_params.json'):
+        """ 
+        Description: Create a template download parameters file 
+        Arguments:
+            filename: (str), file name ending in .json
+        Returns: Writes a json file to disc
+        """
+        dl_params = {
+            "min_duration_s" : 8,
+            "max_duration_s" : 10,
+            "quality" : ["A", "B"],
+            "exclude_nd" : True,
+            "country" :[
+                "Switzerland",
+                "Germany",
+                "France"
+                ],      
+            "species" :[
+                "Corvus corax", 
+                "Fringilla coelebs",
+                "Cyanistes caeruleus",
+                "Sylvia atricapilla",
+                ]
+            }
+        with open(os.path.join(self.start_path, filename), 'w') as f:
+            json.dump(dl_params, f,  indent=4)
+
 
     def summary(self, save_csv = True):
         # import all pkl with an append all dfs and export as csv
@@ -131,7 +139,7 @@ class XCO():
         timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
     
         # make per-species aggregated summaries 
-        df_summary['length_sec'] =  df_summary['length'].apply(self.__convsec) # get total length
+        df_summary['length_sec'] =  df_summary['length'].apply(self._convsec) # get total length
         df01 = pd.crosstab(df_summary['full_spec_name'], df_summary['cnt'], margins=True, dropna=False)
         df02 = pd.crosstab(df_summary['full_spec_name'], df_summary['q'], margins=True, dropna=False)
         df03 = pd.DataFrame(df_summary.groupby('full_spec_name')['length_sec'].sum())
@@ -146,8 +154,6 @@ class XCO():
             df_summary.to_csv(   os.path.join(self.start_path, 'summary_' + '.csv') )
         else:
             return(df_summary)
-
-
 
 
     def get(self, params_json, download = False):
@@ -178,7 +184,7 @@ class XCO():
                 j = r.json()
                 recs = j['recordings']
                 # exclude if length not in specified range 
-                recs = [a for a in recs if self.__convsec(a["length"]) > dl_params['min_duration_s'] and self.__convsec(a["length"]) <= dl_params['max_duration_s']]
+                recs = [a for a in recs if self._convsec(a["length"]) > dl_params['min_duration_s'] and self._convsec(a["length"]) <= dl_params['max_duration_s']]
                 # exclude files with no-derivative licenses
                 if dl_params['exclude_nd']:
                     recs = [a for a in recs if not 'nd' in a['lic'].lower()]
@@ -255,8 +261,6 @@ class XCO():
         print("") 
 
 
-
-
     def mp3_to_wav(self, target_fs):
             """   
             Description : Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
@@ -289,22 +293,13 @@ class XCO():
 
 
 
-   
-         
-
-
-
-    
-
-
-
-
-
     def extract_spectrograms(self, target_sampl_freq, duratSec, win_siz, win_olap, seg_step_size = 1.0, colormap = 'viridis'):
         """
         # plt.col ormaps()
         # 'viridis' 'inferno'  'magma'  'inferno'  'plasma'  'twilight'
         """
+
+        assert win_olap < win_siz, "win_olap must be strictly smaller that win_siz"
 
         #-------------------------------- 
         all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
@@ -334,7 +329,7 @@ class XCO():
 
         # loop over wav files 
         for wavFileName in allWavFileNames: 
-            print(wavFileName)
+            
             try:
 
                 # open wav file and get meta-information 
@@ -348,8 +343,9 @@ class XCO():
                 
                 # make sure fs is correct 
                 if myFs != target_sampl_freq:
-                    print("myFs not equal to target_sampl_freq !!!")
+                    print("Wav file ignored because its sampling frequency is not equal to target_sampl_freq !  " + wavFileName)
                     continue
+                print("Processing file: " + wavFileName)
                 
                 totNbSegments = int(totDurFile_s / duratSec)
 
@@ -358,7 +354,7 @@ class XCO():
                     # print(ii)
                     try:
                         startSec = ii*duratSec
-                        sig = self.read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec)
+                        sig = self._read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec)
                         # de-mean
                         sig = sig - sig.mean() 
                         # compute spectrogram
@@ -392,9 +388,9 @@ class XCO():
                         image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
                         im.save(image_save_path)
                     except:
-                        print("shit")
+                        print("Error during loop over segments of wav file!")
             except:
-                print("super shit")
+                print("Error while reading wav file!")
 
             
                 
@@ -402,9 +398,11 @@ class XCO():
 
 # devel code - supress execution if this is imported as module 
 if __name__ == "__main__":
-    print("Hi, you are in the dev space")
+    print("Hi V, you passed beyond the blackwall, you are in the dev space")
 
     xc = XCO(start_path = 'C:/temp_xc_projects/proj04')
+
+    xc._convsec("44:55")
 
     wavFileName = "C:/temp_xc_projects/proj04/downloaded_data_wav_24000sps/Corvus_coronoides_XC620107_2021_01_17_Corvus_coronoides2.wav"
 
@@ -417,9 +415,17 @@ if __name__ == "__main__":
     sampwidth = waveFile.getsampwidth()
     waveFile.close()
 
-    x_out = xc.read_piece_of_wav(f = wavFileName, 
-                         start_sec = 1.0, 
-                         durat_sec = 2.0, 
-                         )
+    x_out = xc._read_piece_of_wav(
+        f = wavFileName, 
+        start_sec = 1.0, 
+        durat_sec = 2.0, 
+        )
+    
     type(x_out)
     x_out.dtype
+
+    # """ 
+    # Description : aaa
+    # Arguments : bbb
+    # Returns : ccc
+    # """

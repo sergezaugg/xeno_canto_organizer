@@ -15,7 +15,7 @@ xc.start_path
 xc.make_param(filename = 'download_criteria.json')
 # get information of what would be downloaded
 xc.get(params_json = 'download_criteria.json', download = False)
-# download mp3 files into a time-stamped directory with metadata  
+# download mp3 files with metadata  
 xc.get(params_json = 'download_criteria.json', download = True)
 # make aggregated summary table of all mp3 files 
 xc.summary(save_csv = True)
