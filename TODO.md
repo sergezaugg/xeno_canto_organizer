@@ -28,9 +28,6 @@ pip install matplotlib
 
 
 
-# misc 
-python -m pip install --upgrade pip setuptools wheel
-python3 -m pip install --upgrade build
 python -m build
 
 #CC BY
