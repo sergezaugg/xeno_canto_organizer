@@ -21,8 +21,9 @@ xc.summary(save_csv = True)
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(target_fs = 24000)
 # Extract spectrograms of fixed-length segments and stor as PNGs
-# xc.extract_spectrograms(target_sampl_freq = 24000, duratSec = 0.5, win_siz = 256, win_olap = 128, seg_step_size = 0.5, colormap = 'viridis')
-xc.extract_spectrograms(target_sampl_freq = 24000, duratSec = 0.5, win_siz = 256, win_olap = 128, seg_step_size = 0.5)
+xc.extract_spectrograms(target_fs = 24000, segm_duration = 0.5, seg_step_size = 0.5, win_siz = 256, win_olap = 128, equalize = True, colormap = 'viridis')
+xc.extract_spectrograms(target_fs = 24000, segm_duration = 0.5, seg_step_size = 0.5, win_siz = 256, win_olap = 128, equalize = False, colormap = 'viridis')
+
 
 
 

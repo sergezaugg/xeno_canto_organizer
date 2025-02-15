@@ -293,10 +293,18 @@ class XCO():
 
 
 
-    def extract_spectrograms(self, target_sampl_freq, duratSec, win_siz, win_olap, seg_step_size = 1.0, colormap = 'viridis'):
+    def extract_spectrograms(self, target_fs, segm_duration, seg_step_size = 1.0, win_siz = 256, win_olap = 128,  equalize = True, colormap = 'viridis'):
         """
-        # plt.col ormaps()
-        # 'viridis' 'inferno'  'magma'  'inferno'  'plasma'  'twilight'
+        Description : Process wav file by segments, for each segment makes a spectrogram, and saves a PNG
+        Arguments : 
+            target_fs (float) : If wav with different fs are available, this will force to use only one fs.
+            segm_duration (float) : Duration of a segment in seconds
+            seg_step_size (float) : Overlap between consecutive segments, 1.0 = no overlap, 0.5 = 50% overlap
+            win_siz (int) : Size in nb of bins of the FFT window used to compute the short-time fourier transform
+            win_olap (int) : Size in nb of bins of the FFT window overlap
+            equalize (Boolean) : Set True to apply equalization (suppresses stationary background noise), else set to False
+            colormap (str) : Mapping from grayscale to 3-channel color image. (e.g. 'viridis', 'inferno', 'magma', 'inferno', 'plasma', 'twilight'.  see plt.colormaps())
+        Returns : PNG images are saved to disc
         """
 
         assert win_olap < win_siz, "win_olap must be strictly smaller that win_siz"
@@ -304,34 +312,30 @@ class XCO():
         #-------------------------------- 
         all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
         thedir = [a for a in all_dirs if "_wav_" in a and self.download_tag in a]
-        thedir = [a for a in thedir if str(target_sampl_freq) in a ][0]
+        thedir = [a for a in thedir if str(target_fs) in a ][0]
         path_source = os.path.join(self.start_path,  thedir)
         path_destin = os.path.join(self.start_path,  thedir.replace('_wav_','_img_'))
         if not os.path.exists(path_destin):
             os.mkdir(path_destin)
         all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
         allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
-
-        print(allWavFileNames)
+        # print(allWavFileNames)
 
         #-------------------------------- 
         params_dict = {
-            "sampling_frequency" : target_sampl_freq,
-            "segment_duration_sec" : duratSec,
+            "sampling_frequency" : target_fs,
+            "segment_duration_sec" : segm_duration,
             "segment_step_size" : seg_step_size,
             "fft_window_size_bins" : win_siz,
             "fft_window_overlap_bins" : win_olap,
             "colormap" : colormap,
             }
-        
         with open(os.path.join(path_destin, "feature_extraction_parameters.pkl"), 'wb') as f:
             pickle.dump(params_dict, f)
 
         # loop over wav files 
         for wavFileName in allWavFileNames: 
-            
             try:
-
                 # open wav file and get meta-information 
                 waveFile = wave.open(wavFileName, 'r')
                 myFs = waveFile.getframerate()
@@ -342,23 +346,23 @@ class XCO():
                 waveFile.close()
                 
                 # make sure fs is correct 
-                if myFs != target_sampl_freq:
-                    print("Wav file ignored because its sampling frequency is not equal to target_sampl_freq !  " + wavFileName)
+                if myFs != target_fs:
+                    print("Wav file ignored because its sampling frequency is not equal to target_fs !  " + wavFileName)
                     continue
                 print("Processing file: " + wavFileName)
                 
-                totNbSegments = int(totDurFile_s / duratSec)
-
-                # loop over segments within file     
-                for ii in  np.arange(0, (totNbSegments - 0.99), seg_step_size)   :
+                # loop over segments within file   
+                totNbSegments = int(totDurFile_s / segm_duration)  
+                for ii in  np.arange(0, (totNbSegments - 0.99), seg_step_size):
                     # print(ii)
                     try:
-                        startSec = ii*duratSec
-                        sig = self._read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec)
+                        startSec = ii*segm_duration
+                        sig = self._read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = segm_duration)
                         # de-mean
                         sig = sig - sig.mean() 
                         # compute spectrogram
-                        _, _, X = sgn.spectrogram(x = sig, 
+                        _, _, X = sgn.spectrogram(
+                            x = sig, 
                             fs = myFs, 
                             window = 'hamming', 
                             nperseg = win_siz, 
@@ -368,21 +372,16 @@ class XCO():
                             scaling = 'spectrum', 
                             mode = 'psd')
                         # transpose and log 
-                        X = np.flip(X, axis=0) # so that hifg freqs at to of image 
-                        # equalize 
-                        X = sound.median_equalizer(X) 
-                        X = X.transpose()
+                        X = np.flip(X, axis=0) # so that high freqs at top of image 
+                        if equalize:
+                            X = sound.median_equalizer(X) # equalize 
                         X = np.log10(X)
-                        # save image as PNG 
-                        arr = X.T
-                        # print(arr.shape)
                         # normalize 
-                        arr = arr - arr.min()
-                        arr = arr/arr.max()
-                        # color map             
-                        map_val = colormap
-                        cm = plt.get_cmap(map_val)
-                        colored_image = cm(arr)
+                        X = X - X.min()
+                        X = X/X.max()
+                        # apply color map             
+                        cm = plt.get_cmap(colormap)
+                        colored_image = cm(X)
                         im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
                         # save as image 
                         image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
