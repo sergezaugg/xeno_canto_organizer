@@ -2,7 +2,6 @@
 *   allow export as numpy in addition to png
 *   keep track of process with a timestamps
 *   implement unit tests
-*   keep track of frequency and time axes 
 *   replace scipy.signal.spectrogram  with scipy.signal.ShortTimeFFT
 
 ## misc Stuff

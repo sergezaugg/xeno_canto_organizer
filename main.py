@@ -19,13 +19,10 @@ xc.get(params_json = 'download_criteria.json', download = True)
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(target_fs = 24000)
 # Extract spectrograms of fixed-length segments and store as PNG
-xc.extract_spectrograms(target_fs = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 256, equalize = True)
+xc.extract_spectrograms(target_fs = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 400, equalize = True)
 
 
-
-
-
-
+# get info 
 help(xc.make_param)
 help(xc.get)
 help(xc.mp3_to_wav)
