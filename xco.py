@@ -1,6 +1,6 @@
 # """
 # Created 20231203
-# Author: Serge Zaugg
+# Author : Serge Zaugg
 # """
 
 import os
@@ -9,7 +9,6 @@ import json
 import requests
 import pandas as pd
 import unidecode
-import datetime 
 import numpy as np 
 import wave
 import pickle
@@ -20,12 +19,6 @@ import struct
 from  maad import sound
 import subprocess
 import yaml
-
-
-
-# import maad
-# maad.sound.median_equalizer
-# type(aa)
 
 class XCO():
 
@@ -77,7 +70,7 @@ class XCO():
         if sampwidth == 2 :
             unpstr = '<{0}h'.format(Nread*n_ch) # < = little-endian h = 2 bytes ,16-bit 
         else:
-            raise ValueError("Not a 16 bit signed interger audio formats.")
+            raise ValueError("Not a 16 bit signed integer audio formats.")
         # convert byte string into a list of ints
         sig = (struct.unpack(unpstr, sig_byte)) 
         sig = np.array(sig, dtype=float)
@@ -116,44 +109,6 @@ class XCO():
             }
         with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
-
-
-    def summary(self, save_csv = True):
-        # import all pkl with an append all dfs and export as csv
-        main_download_path = os.path.join(self.start_path)
-
-        all_pkls = [a for a in os.listdir(main_download_path) if '_meta.pkl' in a]
-
-        df_summ_li = []
-        for a in all_pkls:
-            df_summ_li.append(pd.read_pickle(os.path.join(main_download_path, a))) 
-          
-            # print(len(df_summ_li))
-        df_summary = pd.concat(df_summ_li)
-        df_summary.sort_values(by=['gen','sp','cnt','q'], axis=0, ascending=True, inplace=True, ignore_index=True)
-
-        # check if full path points to an existing file 
-        all_files = df_summary['downloaded_to_path'] + '/' + df_summary['downloaded_to_file_stem'] + '.mp3'
-        df_summary['file_exists']  = [os.path.exists(p) for p in all_files]
-        # save as csv 
-        timstamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')   
-    
-        # make per-species aggregated summaries 
-        df_summary['length_sec'] =  df_summary['length'].apply(self._convsec) # get total length
-        df01 = pd.crosstab(df_summary['full_spec_name'], df_summary['cnt'], margins=True, dropna=False)
-        df02 = pd.crosstab(df_summary['full_spec_name'], df_summary['q'], margins=True, dropna=False)
-        df03 = pd.DataFrame(df_summary.groupby('full_spec_name')['length_sec'].sum())
-        # merge 
-        df_summa = df01
-        df_summa = df_summa.merge(df02, how = "outer", on = ['full_spec_name'])
-        df_summa = df_summa.merge(df03, how = "outer", on = ['full_spec_name'])
-        df_summa.reset_index(inplace=True)
-        # save to disc
-        if save_csv:
-            df_summa.to_csv(os.path.join(self.start_path, 'summary_agg_' + '.csv') )
-            df_summary.to_csv(   os.path.join(self.start_path, 'summary_' + '.csv') )
-        else:
-            return(df_summary)
 
 
     def get(self, params_json, download = False):
@@ -214,11 +169,11 @@ class XCO():
         if len(recs_pool) <= 0:
             return("selection criteria gave zero files to download")
         
-        # if lenth of recs_pool is > 0
+        # if length of recs_pool is > 0
         df_all = pd.DataFrame(recs_pool)
         if download:
             print("Writing meta-information to pkl ...") 
-            # Create time-stamped directory where files will be downloaded
+            # Create directory to where files will be downloaded
             source_path = os.path.join(main_download_path, self.download_tag + '_orig')
             if not os.path.exists(source_path):
                 os.mkdir(source_path)
@@ -231,7 +186,7 @@ class XCO():
                 full_download_string = re_i["file"]
                 # actually download files 
                 r = requests.get(full_download_string, allow_redirects=True)
-                # simplify filename stem 
+                # simplify and clean filename stem 
                 finam2 = re_i["file-name"].replace('.mp3', '')
                 finam2 = unidecode.unidecode(finam2)
                 finam2 = finam2.replace(' ', '_').replace('-', '_')
@@ -289,14 +244,25 @@ class XCO():
                         paout
                         ])
                 except:
-                    print("An exception occured during mp3-to-wav conversion with ffmpeg!")
+                    print("An exception occurred during mp3-to-wav conversion with ffmpeg!")
 
 
 
-    def extract_spectrograms(self, target_sampl_freq, duratSec, win_siz, win_olap, seg_step_size = 1.0, colormap = 'viridis'):
+    def extract_spectrograms(self, target_fs, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  equalize = True, colormap = 'gray'):
         """
-        # plt.col ormaps()
-        # 'viridis' 'inferno'  'magma'  'inferno'  'plasma'  'twilight'
+        Description : Process wav file by segments, for each segment makes a spectrogram, and saves a PNG
+        Arguments : 
+            target_fs (float) : If wav with different fs are available, this will force to use only one fs.
+            segm_duration (float) : Duration of a segment in seconds
+            segm_step (float) : Overlap between consecutive segments, 1.0 = no overlap, 0.5 = 50% overlap
+            win_siz (int) : Size in nb of bins of the FFT window used to compute the short-time fourier transform
+            win_olap (int) : Size in nb of bins of the FFT window overlap
+            equalize (Boolean) : Set True to apply equalization (suppresses stationary background noise), else set to False
+            colormap (str) : 
+                Set to 'gray' to write one-channel images (default)
+                Other strings will map spectrogram to 3-channel color images e.g. 'viridis', 'inferno', 'magma', 'inferno', 'plasma', 'twilight' 
+                For full list see see plt.colormaps()
+        Returns : PNG images are saved to disc
         """
 
         assert win_olap < win_siz, "win_olap must be strictly smaller that win_siz"
@@ -304,34 +270,36 @@ class XCO():
         #-------------------------------- 
         all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
         thedir = [a for a in all_dirs if "_wav_" in a and self.download_tag in a]
-        thedir = [a for a in thedir if str(target_sampl_freq) in a ][0]
+        thedir = [a for a in thedir if str(target_fs) in a ][0]
         path_source = os.path.join(self.start_path,  thedir)
         path_destin = os.path.join(self.start_path,  thedir.replace('_wav_','_img_'))
         if not os.path.exists(path_destin):
             os.mkdir(path_destin)
         all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
         allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
+        # print(allWavFileNames)
 
-        print(allWavFileNames)
-
-        #-------------------------------- 
+        # pragmatically get time and frequency axes 
+        sig_rand = np.random.uniform(size=int(segm_duration*target_fs))   
+        f_axe, t_axe, _ = sgn.spectrogram(x = sig_rand, fs = target_fs, nperseg = win_siz, noverlap = win_olap, return_onesided = True)
+      
+        # save parameters for later traceability
         params_dict = {
-            "sampling_frequency" : target_sampl_freq,
-            "segment_duration_sec" : duratSec,
-            "segment_step_size" : seg_step_size,
+            "sampling_frequency" : target_fs,
+            "segment_duration_sec" : segm_duration,
+            "segment_step_size" : segm_step,
             "fft_window_size_bins" : win_siz,
             "fft_window_overlap_bins" : win_olap,
             "colormap" : colormap,
+            "frequency_axis" : f_axe.tolist(),
+            "time_axis" : t_axe.tolist(),
             }
-        
-        with open(os.path.join(path_destin, "feature_extraction_parameters.pkl"), 'wb') as f:
-            pickle.dump(params_dict, f)
+        with open(os.path.join(path_destin, "feature_extraction_parameters.json"), 'w') as f:
+            json.dump(params_dict, f, indent=4)    
 
         # loop over wav files 
         for wavFileName in allWavFileNames: 
-            
             try:
-
                 # open wav file and get meta-information 
                 waveFile = wave.open(wavFileName, 'r')
                 myFs = waveFile.getframerate()
@@ -340,25 +308,24 @@ class XCO():
                 nchannels = waveFile.getnchannels()    
                 sampwidth = waveFile.getsampwidth()
                 waveFile.close()
-                
+
                 # make sure fs is correct 
-                if myFs != target_sampl_freq:
-                    print("Wav file ignored because its sampling frequency is not equal to target_sampl_freq !  " + wavFileName)
+                if myFs != target_fs:
+                    print("Wav file ignored because its sampling frequency is not equal to target_fs !  " + wavFileName)
                     continue
                 print("Processing file: " + wavFileName)
                 
-                totNbSegments = int(totDurFile_s / duratSec)
-
-                # loop over segments within file     
-                for ii in  np.arange(0, (totNbSegments - 0.99), seg_step_size)   :
+                # loop over segments within file   
+                totNbSegments = int(totDurFile_s / segm_duration)  
+                for ii in  np.arange(0, (totNbSegments - 0.99), segm_step):
                     # print(ii)
                     try:
-                        startSec = ii*duratSec
-                        sig = self._read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = duratSec)
-                        # de-mean
-                        sig = sig - sig.mean() 
+                        startSec = ii*segm_duration
+                        sig = self._read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = segm_duration)
+                        sig = sig - sig.mean() # de-mean
                         # compute spectrogram
-                        _, _, X = sgn.spectrogram(x = sig, 
+                        f_axe, t_axe, X = sgn.spectrogram(
+                            x = sig, 
                             fs = myFs, 
                             window = 'hamming', 
                             nperseg = win_siz, 
@@ -368,22 +335,21 @@ class XCO():
                             scaling = 'spectrum', 
                             mode = 'psd')
                         # transpose and log 
-                        X = np.flip(X, axis=0) # so that hifg freqs at to of image 
-                        # equalize 
-                        X = sound.median_equalizer(X) 
-                        X = X.transpose()
+                        X = np.flip(X, axis=0) # so that high freqs at top of image 
+                        if equalize:
+                            X = sound.median_equalizer(X) # equalize 
                         X = np.log10(X)
-                        # save image as PNG 
-                        arr = X.T
-                        # print(arr.shape)
                         # normalize 
-                        arr = arr - arr.min()
-                        arr = arr/arr.max()
-                        # color map             
-                        map_val = colormap
-                        cm = plt.get_cmap(map_val)
-                        colored_image = cm(arr)
-                        im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
+                        X = X - X.min()
+                        X = X/X.max()
+                        # facultatively apply color map  
+                        if colormap == "gray":
+                            im = Image.fromarray((X[:, :] * 255).astype(np.uint8))
+                        else:           
+                            cm = plt.get_cmap(colormap)
+                            colored_image = cm(X)
+                            im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
+                        # print("PIL image size: ", im.size, im.mode)
                         # save as image 
                         image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
                         im.save(image_save_path)
@@ -398,14 +364,14 @@ class XCO():
 
 # devel code - supress execution if this is imported as module 
 if __name__ == "__main__":
-    print("Hi V, you passed beyond the blackwall, you are in the dev space")
+    print("Hi V, you passed beyond the blackwall, you are in the dev space now!")
 
+    plt.colormaps()
+    
     xc = XCO(start_path = 'C:/temp_xc_projects/proj04')
-
     xc._convsec("44:55")
 
     wavFileName = "C:/temp_xc_projects/proj04/downloaded_data_wav_24000sps/Corvus_coronoides_XC620107_2021_01_17_Corvus_coronoides2.wav"
-
     # open wav file and get meta-information 
     waveFile = wave.open(wavFileName, 'r')
     myFs = waveFile.getframerate()
@@ -414,13 +380,11 @@ if __name__ == "__main__":
     nchannels = waveFile.getnchannels()    
     sampwidth = waveFile.getsampwidth()
     waveFile.close()
-
     x_out = xc._read_piece_of_wav(
         f = wavFileName, 
         start_sec = 1.0, 
         durat_sec = 2.0, 
         )
-    
     type(x_out)
     x_out.dtype
 
@@ -429,3 +393,7 @@ if __name__ == "__main__":
     # Arguments : bbb
     # Returns : ccc
     # """
+
+
+    sig_rand = np.random.uniform(size=int(78))  
+    sig_rand.tolist()
