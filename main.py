@@ -16,15 +16,19 @@ xc.make_param(filename = 'download_criteria.json')
 xc.get(params_json = 'download_criteria.json', download = False)
 # Download mp3 files with metadata  
 xc.get(params_json = 'download_criteria.json', download = True)
-# (facultative) Make an aggregated summary table of mp3 files 
-xc.summary(save_csv = True)
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(target_fs = 24000)
 # Extract spectrograms of fixed-length segments and store as PNG
-xc.extract_spectrograms(target_fs = 24000, segm_duration = 0.5, seg_step_size = 0.5, win_siz = 256, win_olap = 128, equalize = True, colormap = 'viridis')
-xc.extract_spectrograms(target_fs = 24000, segm_duration = 1.0, seg_step_size = 1.0, win_siz = 256, win_olap = 128, equalize = True)
-xc.extract_spectrograms(target_fs = 24000, segm_duration = 0.5, seg_step_size = 0.5, win_siz = 256, win_olap = 128, equalize = True, colormap = 'gray')
+xc.extract_spectrograms(target_fs = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 256, equalize = True)
 
+
+
+
+
+
+help(xc.make_param)
+help(xc.get)
 help(xc.mp3_to_wav)
 help(xc.extract_spectrograms)
+
 
