@@ -18,7 +18,12 @@ pip install pyyaml
 pip install matplotlib
 
 
-git tag -a v0.9.0 -m "First preliminary working version, still needs clean-up and additional functionality"
+done --- git tag -a v0.9.0 -m "First preliminary working version, still needs clean-up and additional functionality"
+
+git tag -a v0.9.1 -m "simplified extract_spectrograms, equalization made optional, 1-CH or 3-CH images can be saved, freq and time axis now exported "
+
+
+
 
 
 
