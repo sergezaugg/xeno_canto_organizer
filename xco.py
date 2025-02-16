@@ -334,6 +334,8 @@ class XCO():
                             return_onesided = True, 
                             scaling = 'spectrum', 
                             mode = 'psd')
+                        # remove nyquist freq
+                        X = X[:-1, :]
                         # transpose and log 
                         X = np.flip(X, axis=0) # so that high freqs at top of image 
                         if equalize:
