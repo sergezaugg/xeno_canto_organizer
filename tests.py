@@ -1,25 +1,57 @@
+# """
+# Author : Serge Zaugg
+# Description : 
+# """
+
 import unittest
-
 import xco 
+import os
+import pandas as pd
+import shutil
+
+class Test01(unittest.TestCase):
+
+    # re-initialize the dir for temporary test files 
+    temp_test_path = './tests_temp'
+    if os.path.exists(temp_test_path):
+        shutil.rmtree(temp_test_path)
+    if not os.path.exists(temp_test_path):
+        os.makedirs(temp_test_path)
+
+    # basic tests 
+    @classmethod
+    def setUpClass(self):
+        xc = xco.XCO(start_path = './tests_temp')
+        xc.make_param(filename = 'test.json')
+        xc.get(params_json = 'test.json', download = True)
+
+    def test_json_created(self):
+        self.assertTrue(os.path.isfile('./tests_temp/test.json'), 'JSON file not created')
+
+    def test_num_mp3(self):
+        num_files_realized = len(os.listdir('tests_temp/downloaded_data_orig'))
+        num_files_expected = 10
+        self.assertEqual(num_files_realized, num_files_expected, 'Files are not equal')
+
+    def test_summary_csv(self):   
+        df = pd.read_csv('tests_temp/downloaded_data_meta.csv')
+        df_shape_realized = df.shape
+        df_shape_expected = (10, 41)
+        self.assertEqual(df_shape_realized, df_shape_expected, 'Files are not equal')
+    
 
 
-# define the root path 
-xc = xco.XCO(start_path = './tests')
-# check where data will be retrieved
 
-# create a template json parameter file (to be edited)
-xc.make_param(filename = 'test.json')
-
-# download mp3 files with metadata  
-xc.get(params_json = 'test.json', download = True)
-
-
-
-class TestCalculations(unittest.TestCase):
-
-    def test_sum(self):
-        calculation = Calculations(8, 2)
-        self.assertEqual(calculation.get_sum(), 10, 'The sum is wrong.')
 
 if __name__ == '__main__':
+
     unittest.main()
+
+
+
+ # python -m unittest -v
+
+
+
+
+

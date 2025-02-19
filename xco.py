@@ -91,8 +91,8 @@ class XCO():
         Returns: Writes a json file to disc
         """
         dl_params = {
-            "min_duration_s" : 9,
-            "max_duration_s" : 10,
+            "min_duration_s" : 5.5,
+            "max_duration_s" : 6,
             "quality" : ["A", "B"],
             "exclude_nd" : True,
             "country" :[
@@ -100,7 +100,6 @@ class XCO():
                 "France"
                 ],      
             "species" :[
-                "Corvus corax", 
                 "Fringilla coelebs",
                 "Cyanistes caeruleus"
                 ]
