@@ -1,29 +1,29 @@
-# Xeno-Canto organizer
+# Xeno-Canto organizer 
 
 **A python tool to prepare Xeno-Canto audio files for machine learning projects**
-
-* Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecological, behavioral and acoustical applications. 
-* However, the raw mp3 files cannot be directly used for machine learning (ML) because they first need to be prepared. 
-* This tool allows to download, prepare and organize XC data in a structured repository tree that can be directly accessed by ML processes.
+* :construction:  Still under development :construction:
+* Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecological and acoustical applications. 
+* However, the raw mp3 files cannot be directly used by machine learning (ML) processes. 
+* This tool allows to download, prepare and organize XC data such that it can be readily used by ML processes.
 * It includes data segmentation and feature extraction as spectrograms
-* :construction: The tool is still under development :construction:
 
 ## Features
 * Check summaries before actual download
 * Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
-* Also stores the XC meta-data in PKL files that are easy to integrate with python
+* Also stores the XC meta-data in PKL files that are easy to integrate with Python
 * Spectrogram parameters can be flexibly adjusted, eg. short or long spectrograms can be taken, FFT params can be set
 * Spectrogram are stored as PNG images which allows easy exploration and swift integration with established CNNs
-* Original file name (mp3) is used as stub in all other files (wav and png) for traceability
 
 ## Usage
 1. Make sure **ffmpg** and the Python packages are installed (see Dependencies and installation)
 2. Check **config.yaml** that the url to XC API is still valid
 3. Open **main.py** and run line-by-line at first to adjust the parameters
-4. Once **main.py** is ready, run **main.py**
+4. Once **main.py** is ready, run the complete **main.py** 
 5. Result: metadata, mp3, wav, and spectrograms should be ready in their respective directories
 6. :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
 
+
+## Sample code
 Example of how preparation of data for an ML project can be handled with super-short Python script
 ```python
 # Import xco module
@@ -44,21 +44,18 @@ xc.extract_spectrograms(target_fs = 24000, segm_duration = 1.0, segm_step = 0.5,
 
 ## Illustration
 * The figure below is a snapshot of a few spectrograms obtained with this tool.
-* Note that this is an illustration with some particular parameter values:
     * Mp3 were converted to wav files with fs=24000
-    * Wav files were cut into short pieces of 0.5 seconds and spectrograms extracted via short time Fourier transform (STFT)
+    * Wav files were cut into short pieces of 1.0 seconds and spectrograms extracted via short time Fourier transform (STFT)
     * In this example, STFT window had 256 bins (Hamming) with 128 bins overlap
-    * Spectrograms were equalized (maad.sound.median_equalizer), log10 transformed and mapped to [0, 255]
-    * This gave small images with constant dimension of 92 time bins x 129 frequency bins
-    * Original filename and position in original wav file is tracked in the image filename
-    * For each file the XC metadata is tracked in **downloaded_data_meta.pkl**
+    * Spectrograms were equalized (optional, see appendix 2), log10 transformed and mapped to [0, 255]
+    * They can be exported as 1-channel images (here) or 3-channel color images (appendix 1)
 
-![](./images/spectros_01.png)  
+![](./images/spectros_02.png)  
 
 ## Why save spectrogram of sounds as PNG images ?
 * Yes, for people working in acoustics this is a bit irritating
-* However, it is handy because many PyTorch models and data augmentation procedures can directly ingest PNGs
-* However, it is handy because images can be easily visualized with standard software
+* It is handy because many PyTorch models and data augmentation procedures can directly ingest PNGs
+* It is handy because images can be easily visualized with standard software
 * Export as binary numpy files is planned but not yet available.
 
 ## Dependencies and installation
@@ -75,9 +72,19 @@ pip install -r requirements.txt
 * https://xeno-canto.org/explore/api
 
 
+## Appendix 1
+
+It is also possible to extract 3-channel RGB images, e.g to be directly ingested by Image CNNs such as ResNet, EfficintNet an co
+
+![](./images/spectros_01.png)  
 
 
+## Appendix 2
 
+It is also possible to suppress equalization. 
+However, the high-pass filters or the low-freq ambient noise will often be dominant.
+
+![](./images/spectros_03.png)  
 
 
 
