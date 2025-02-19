@@ -91,20 +91,18 @@ class XCO():
         Returns: Writes a json file to disc
         """
         dl_params = {
-            "min_duration_s" : 8,
+            "min_duration_s" : 9,
             "max_duration_s" : 10,
             "quality" : ["A", "B"],
             "exclude_nd" : True,
             "country" :[
                 "Switzerland",
-                "Germany",
                 "France"
                 ],      
             "species" :[
                 "Corvus corax", 
                 "Fringilla coelebs",
-                "Cyanistes caeruleus",
-                "Sylvia atricapilla",
+                "Cyanistes caeruleus"
                 ]
             }
         with open(os.path.join(self.start_path, filename), 'w') as f:
