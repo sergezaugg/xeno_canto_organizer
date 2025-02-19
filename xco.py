@@ -91,20 +91,17 @@ class XCO():
         Returns: Writes a json file to disc
         """
         dl_params = {
-            "min_duration_s" : 8,
-            "max_duration_s" : 10,
+            "min_duration_s" : 5.5,
+            "max_duration_s" : 6,
             "quality" : ["A", "B"],
             "exclude_nd" : True,
             "country" :[
                 "Switzerland",
-                "Germany",
                 "France"
                 ],      
             "species" :[
-                "Corvus corax", 
                 "Fringilla coelebs",
-                "Cyanistes caeruleus",
-                "Sylvia atricapilla",
+                "Cyanistes caeruleus"
                 ]
             }
         with open(os.path.join(self.start_path, filename), 'w') as f:
@@ -334,6 +331,8 @@ class XCO():
                             return_onesided = True, 
                             scaling = 'spectrum', 
                             mode = 'psd')
+                        # remove nyquist freq
+                        X = X[:-1, :]
                         # transpose and log 
                         X = np.flip(X, axis=0) # so that high freqs at top of image 
                         if equalize:
