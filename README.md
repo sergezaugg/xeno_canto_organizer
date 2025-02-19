@@ -1,12 +1,11 @@
-# Xeno-Canto organizer
+# Xeno-Canto organizer 
 
 **A python tool to prepare Xeno-Canto audio files for machine learning projects**
-
+* :construction:  Still under development :construction:
 * Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecological and acoustical applications. 
 * However, the raw mp3 files cannot be directly used by machine learning (ML) processes. 
 * This tool allows to download, prepare and organize XC data such that it can be readily used by ML processes.
 * It includes data segmentation and feature extraction as spectrograms
-* :construction: The tool is still under development :construction:
 
 ## Features
 * Check summaries before actual download
