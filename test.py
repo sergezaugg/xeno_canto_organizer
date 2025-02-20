@@ -22,9 +22,10 @@ class Test01(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         xc = xco.XCO(start_path = './tests_temp')
-        xc.make_param(filename = 'test.json')
-        xc.get(params_json = 'test.json', download = True)
-
+        xc.make_param(filename = 'test.json', template = "mini")
+        df_records = xc.get_summary(params_json = 'test.json')
+        xc.download(df_recs = df_records)
+        
     def test_json_created(self):
         self.assertTrue(os.path.isfile('./tests_temp/test.json'), 'JSON file not created')
 
@@ -36,26 +37,12 @@ class Test01(unittest.TestCase):
     def test_summary_csv(self):   
         df = pd.read_csv('tests_temp/downloaded_data_meta.csv')
         df_shape_realized = df.shape
-        df_shape_expected = (10, 41)
+        df_shape_expected = (10, 39)
         self.assertEqual(df_shape_realized, df_shape_expected, 'Files are not equal')
     
 
-
-
-
 if __name__ == '__main__':
-
     unittest.main()
 
-
-
-# python -m unit_test -v
 # python -m unittest -v
-
-# python -m unittest -v
-
-
-
-
-
 
