@@ -4,6 +4,8 @@
 # """
 
 import xco 
+import pandas as pd
+
 # Make an instance of the XCO class and define the start path 
 xc = xco.XCO(start_path = 'C:/temp_xc_projects/proj04')
 # Check where data will be retrieved
@@ -17,19 +19,16 @@ xc.make_param(filename = 'download_criteria.json')
 
 
 # Get information of what would be downloaded
-df_summary, records_list = xc.get_summary(params_json = 'download_criteria.json')
+df_records = xc.get_summary(params_json = 'download_criteria.json')
 
 
-df_summary.shape
-
-len(records_list)
-records_list[5]
-
-
-# Download mp3 files with metadata  
+# make summry tables 
+print(pd.crosstab(df_records['full_spec_name'], df_records['cnt'], margins=True, dropna=False))
+print(df_records['lic'].value_counts())
 
 
-xc.download(recs_pool=records_list)
+
+xc.download(df_recs=df_records)
 
 
 
@@ -44,10 +43,5 @@ xc.mp3_to_wav(target_fs = 24000)
 xc.extract_spectrograms(target_fs = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 400, equalize = False, colormap='viridis')
 
 
-# get info 
-help(xc.make_param)
-help(xc.get)
-help(xc.mp3_to_wav)
-help(xc.extract_spectrograms)
 
 

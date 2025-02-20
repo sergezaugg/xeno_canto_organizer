@@ -136,7 +136,6 @@ class XCO():
                 recs = [a for a in recs if a['q'] in dl_params['quality']]
                 # get meta-data as df from jsom 
                 _ = [a.pop('sono') for a in recs]
-
                 # replace "";"" by empty string in all values (needed for later export as csv)
                 self.recs = recs
                 if len(recs) > 0:
@@ -150,34 +149,33 @@ class XCO():
                             except:
                                 3+3
                         # print(recs[l]['rmk'])
-
                 recs_pool.extend(recs)
 
-        # final handling
-        print("There are " + str(len(recs_pool)) + " files for download")
-        if len(recs_pool) <= 0:
-            return("selection criteria gave zero files to download")
-        
-        # if length of recs_pool is > 0
-        df_all = pd.DataFrame(recs_pool)
-        return(df_all, recs_pool)
+        # make df and return
+        df_recs = pd.DataFrame(recs_pool)
+        df_recs['full_spec_name'] = df_recs['gen'] + ' ' +  df_recs['sp']
+        return(df_recs)
 
 
-    def download(self, recs_pool):
-
+    def download(self, df_recs):
+        """ 
+        Download 
+        """
         main_download_path = os.path.join(self.start_path)
         if not os.path.exists(main_download_path):
             os.mkdir(main_download_path)
 
-        print("Writing meta-information to pkl ...") 
         # Create directory to where files will be downloaded
         source_path = os.path.join(main_download_path, self.download_tag + '_orig')
         if not os.path.exists(source_path):
             os.mkdir(source_path)
     
-        # download 
-        print("Downloading files ...")
-        for re_i in recs_pool:
+        for i,r in df_recs.iterrows():
+            # print(r)
+            re_i = r.to_dict()
+            print("Downloading file: ", re_i["file-name"])
+
+            # for re_i in recs_pool:
             # re_i["also"] = ' + '.join(re_i["also"])
             # full_download_string = 'http:' + re_i["file"]
             full_download_string = re_i["file"]
@@ -195,7 +193,7 @@ class XCO():
             # keep track of simplified name
             re_i['downloaded_to_path'] = source_path
             re_i['downloaded_to_file_stem'] = finam2
-        df_all_extended = pd.DataFrame(recs_pool)
+        df_all_extended = df_recs
         df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
         df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
         df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
