@@ -1,0 +1,17 @@
+{
+    "min_duration_s": 5.5,
+    "max_duration_s": 6,
+    "quality": [
+        "A",
+        "B"
+    ],
+    "exclude_nd": true,
+    "country": [
+        "Switzerland",
+        "France"
+    ],
+    "species": [
+        "Fringilla coelebs",
+        "Cyanistes caeruleus"
+    ]
+}

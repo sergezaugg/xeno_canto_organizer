@@ -124,6 +124,7 @@ class XCO():
                 search_str = ke.replace(' ', '+') 
                 # API HTTP request of meta data 
                 full_query_string = self.XC_API_URL + '?query=' + search_str + cnt_str
+                print(full_query_string)
                 r = requests.get(full_query_string, allow_redirects=True)
                 j = r.json()
                 recs = j['recordings']

@@ -28,18 +28,7 @@ Example of how preparation of data for an ML project can be handled with super-s
 ```python
 # Import xco module
 import xco 
-# Make an instance of the XCO class and define the start path 
-xc = xco.XCO(start_path = '<path to the project dir>')
-# Create a template json parameter file (to be edited)
-xc.make_param(filename = 'download_criteria.json')
-# Get information of what would be downloaded
-xc.get(params_json = 'download_criteria.json', download = False)
-# Download mp3 files with metadata  
-xc.get(params_json = 'download_criteria.json', download = True)
-# Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
-xc.mp3_to_wav(target_fs = 24000)
-# Extract spectrograms of fixed-length segments and store as PNGs
-xc.extract_spectrograms(target_fs = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 256, equalize = True)
+
 ```
 
 ## Illustration
@@ -70,6 +59,11 @@ pip install -r requirements.txt
 ## Useful links
 * https://creativecommons.org/licenses/
 * https://xeno-canto.org/explore/api
+
+
+## Limitation
+* only 1 country and 1 species per request allowed by API
+* only 1 request per second allowed by API
 
 
 ## Appendix 1
