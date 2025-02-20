@@ -26,20 +26,24 @@
 ## Sample code
 Example of how preparation of data for an ML project can be handled with super-short Python script
 ```python
-# Import xco module
+
+#----------------------
+# minimalistic example
 import xco 
 # Make an instance of the XCO class and define the start path 
-xc = xco.XCO(start_path = '<path to the project dir>')
+xc = xco.XCO(start_path = 'C:/<path where data will be stored>')
 # Create a template json parameter file (to be edited)
-xc.make_param(filename = 'download_criteria.json')
-# Get information of what would be downloaded
-xc.get(params_json = 'download_criteria.json', download = False)
-# Download mp3 files with metadata  
-xc.get(params_json = 'download_criteria.json', download = True)
+xc.make_param(filename = 'download_criteria.json', template = "mini")
+# Get information of what will be downloaded
+df_records = xc.get_summary(params_json = 'download_criteria.json')
+# make summaries  
+print(df_records.shape)
+# Download the files 
+xc.download(df_recs = df_records)
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
-xc.mp3_to_wav(target_fs = 24000)
-# Extract spectrograms of fixed-length segments and store as PNGs
-xc.extract_spectrograms(target_fs = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 256, equalize = True)
+xc.mp3_to_wav(target_fs = 20000)
+# Extract spectrograms of fixed-length segments and store as PNG
+xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, equalize = False, colormap='viridis')
 ```
 
 ## Illustration
@@ -70,6 +74,11 @@ pip install -r requirements.txt
 ## Useful links
 * https://creativecommons.org/licenses/
 * https://xeno-canto.org/explore/api
+
+
+## Limitation
+* Apparently, only 1 country and 1 species per request allowed by XC API
+* Only 1 request per second allowed by XC API
 
 
 ## Appendix 1

@@ -83,48 +83,39 @@ class XCO():
     #----------------------------------
     # (2) main methods 
 
-    def make_param(self, filename = 'download_params.json'):
+    def make_param(self, filename = 'download_params.json', template = "mini"):
         """ 
         Description: Create a template download parameters file 
         Arguments:
             filename: (str), file name ending in .json
+            template: (str), which template to use. Valid values are "mini", "n_europe", "sw_europe"
         Returns: Writes a json file to disc
         """
-        dl_params = {
-            "min_duration_s" : 5.5,
-            "max_duration_s" : 6,
-            "quality" : ["A", "B"],
-            "exclude_nd" : True,
-            "country" :[
-                "Switzerland",
-                "France"
-                ],      
-            "species" :[
-                "Fringilla coelebs",
-                "Cyanistes caeruleus"
-                ]
-            }
+        if template == "mini":
+            with open(os.path.join('./sample_json/xc_downl_mini.json')) as f:
+                dl_params = json.load(f)
+        elif template == "n_europe":
+            with open(os.path.join('./sample_json/xc_downl_n_europe.json')) as f:
+                dl_params = json.load(f)
+        elif template == "sw_europe":
+            with open(os.path.join('./sample_json/xc_downl_sw_europe.json')) as f:
+                dl_params = json.load(f)    
+        else:
+            return("Please provide a valid value for argument 'template'")
+    
         with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
 
 
-    def get(self, params_json, download = False):
+    def get_summary(self, params_json):
         """ 
-        Main function to download mp3 from XC, or just get a summary
+        get a summary
         """
-
-        main_download_path = os.path.join(self.start_path)
-        if not os.path.exists(main_download_path):
-            os.mkdir(main_download_path)
-
         # load parameters from json file 
         with open(os.path.join(self.start_path, params_json)) as f:
             dl_params = json.load(f)
 
         # retrieve meta data from XC web and select candidate files to be downloaded
-        print("") 
-        print("*******************************") 
-        print("Retrieving meta-data from xc ...")
         recs_pool = []
         for cnt in dl_params['country']:
             cnt_str = '+cnt:' + cnt
@@ -132,6 +123,7 @@ class XCO():
                 search_str = ke.replace(' ', '+') 
                 # API HTTP request of meta data 
                 full_query_string = self.XC_API_URL + '?query=' + search_str + cnt_str
+                print(full_query_string)
                 r = requests.get(full_query_string, allow_redirects=True)
                 j = r.json()
                 recs = j['recordings']
@@ -144,7 +136,6 @@ class XCO():
                 recs = [a for a in recs if a['q'] in dl_params['quality']]
                 # get meta-data as df from jsom 
                 _ = [a.pop('sono') for a in recs]
-
                 # replace "";"" by empty string in all values (needed for later export as csv)
                 self.recs = recs
                 if len(recs) > 0:
@@ -158,60 +149,56 @@ class XCO():
                             except:
                                 3+3
                         # print(recs[l]['rmk'])
-
                 recs_pool.extend(recs)
 
-        # final handling
-        print("There are " + str(len(recs_pool)) + " files for download")
-        if len(recs_pool) <= 0:
-            return("selection criteria gave zero files to download")
-        
-        # if length of recs_pool is > 0
-        df_all = pd.DataFrame(recs_pool)
-        if download:
-            print("Writing meta-information to pkl ...") 
-            # Create directory to where files will be downloaded
-            source_path = os.path.join(main_download_path, self.download_tag + '_orig')
-            if not os.path.exists(source_path):
-                os.mkdir(source_path)
-        
-            # download 
-            print("Downloading files ...")
-            for re_i in recs_pool:
-                # re_i["also"] = ' + '.join(re_i["also"])
-                # full_download_string = 'http:' + re_i["file"]
-                full_download_string = re_i["file"]
-                # actually download files 
-                r = requests.get(full_download_string, allow_redirects=True)
-                # simplify and clean filename stem 
-                finam2 = re_i["file-name"].replace('.mp3', '')
-                finam2 = unidecode.unidecode(finam2)
-                finam2 = finam2.replace(' ', '_').replace('-', '_')
-                finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
-                tag =  re_i['gen'] + "_" + re_i['sp'] + '_'
-                finam2 = tag + finam2
-                # write file to disc
-                open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
-                # keep track of simplified name
-                re_i['downloaded_to_path'] = source_path
-                re_i['downloaded_to_file_stem'] = finam2
-            df_all_extended = pd.DataFrame(recs_pool)
-            df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
-            df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
-            df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
+        # make df and return
+        df_recs = pd.DataFrame(recs_pool)
+        df_recs['full_spec_name'] = df_recs['gen'] + ' ' +  df_recs['sp']
+        return(df_recs)
 
-        # finally, print some summaries     
-        print("")
-        print("Details:")
-        df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
-        print(pd.crosstab(df_all['full_spec_name'], df_all['cnt'], margins=True, dropna=False))
-        print("")
-        print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True, dropna=False))
-        print("")
-        print(df_all['lic'].value_counts())
-        print("*******************************") 
-        print("") 
 
+    def download(self, df_recs):
+        """ 
+        Download 
+        """
+        main_download_path = os.path.join(self.start_path)
+        if not os.path.exists(main_download_path):
+            os.mkdir(main_download_path)
+
+        # Create directory to where files will be downloaded
+        source_path = os.path.join(main_download_path, self.download_tag + '_orig')
+        if not os.path.exists(source_path):
+            os.mkdir(source_path)
+    
+        for i,r in df_recs.iterrows():
+            # print(r)
+            re_i = r.to_dict()
+            print("Downloading file: ", re_i["file-name"])
+
+            # for re_i in recs_pool:
+            # re_i["also"] = ' + '.join(re_i["also"])
+            # full_download_string = 'http:' + re_i["file"]
+            full_download_string = re_i["file"]
+            # actually download files 
+            r = requests.get(full_download_string, allow_redirects=True)
+            # simplify and clean filename stem 
+            finam2 = re_i["file-name"].replace('.mp3', '')
+            finam2 = unidecode.unidecode(finam2)
+            finam2 = finam2.replace(' ', '_').replace('-', '_')
+            finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
+            tag =  re_i['gen'] + "_" + re_i['sp'] + '_'
+            finam2 = tag + finam2
+            # write file to disc
+            open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
+            # keep track of simplified name
+            re_i['downloaded_to_path'] = source_path
+            re_i['downloaded_to_file_stem'] = finam2
+        df_all_extended = df_recs
+        df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
+        df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
+        df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
+
+    
 
     def mp3_to_wav(self, target_fs):
             """   
