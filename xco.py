@@ -83,27 +83,26 @@ class XCO():
     #----------------------------------
     # (2) main methods 
 
-    def make_param(self, filename = 'download_params.json'):
+    def make_param(self, filename = 'download_params.json', template = "mini"):
         """ 
         Description: Create a template download parameters file 
         Arguments:
             filename: (str), file name ending in .json
+            template: (str), which template to use. Valid values are "mini", "n_europe", "sw_europe"
         Returns: Writes a json file to disc
         """
-        dl_params = {
-            "min_duration_s" : 5.5,
-            "max_duration_s" : 6,
-            "quality" : ["A", "B"],
-            "exclude_nd" : True,
-            "country" :[
-                "Switzerland",
-                "France"
-                ],      
-            "species" :[
-                "Fringilla coelebs",
-                "Cyanistes caeruleus"
-                ]
-            }
+        if template == "mini":
+            with open(os.path.join('./sample_json/xc_downl_mini.json')) as f:
+                dl_params = json.load(f)
+        elif template == "n_europe":
+            with open(os.path.join('./sample_json/xc_downl_n_europe.json')) as f:
+                dl_params = json.load(f)
+        elif template == "sw_europe":
+            with open(os.path.join('./sample_json/xc_downl_sw_europe.json')) as f:
+                dl_params = json.load(f)    
+        else:
+            return("Please provide a valid value for argument 'template'")
+    
         with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
 

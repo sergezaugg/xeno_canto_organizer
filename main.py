@@ -14,7 +14,9 @@ xc.XC_API_URL
 xc.start_path
 
 # Create a template json parameter file (to be edited)
-xc.make_param(filename = 'download_criteria.json')
+xc.make_param(filename = 'download_criteria.json', template = "mini")
+# xc.make_param(filename = 'download_criteria.json', template = "n_europe")
+# xc.make_param(filename = 'download_criteria.json', template = "sw_europe")
 
 # Get information of what will be downloaded
 df_records = xc.get_summary(params_json = 'download_criteria.json')
@@ -26,7 +28,7 @@ print(df_records['cnt'].value_counts())
 print(df_records['lic'].value_counts())
 
 # Download the files 
-xc.download(df_recs=df_records)
+xc.download(df_recs = df_records)
 
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(target_fs = 24000)
