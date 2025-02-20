@@ -12,10 +12,32 @@ xc.XC_API_URL
 xc.start_path
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json')
+
+
+
+
 # Get information of what would be downloaded
-xc.get(params_json = 'download_criteria.json', download = False)
+df_summary, records_list = xc.get_summary(params_json = 'download_criteria.json')
+
+
+df_summary.shape
+
+len(records_list)
+records_list[5]
+
+
 # Download mp3 files with metadata  
-xc.get(params_json = 'download_criteria.json', download = True)
+
+
+xc.download(recs_pool=records_list)
+
+
+
+
+
+
+
+
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(target_fs = 24000)
 # Extract spectrograms of fixed-length segments and store as PNG

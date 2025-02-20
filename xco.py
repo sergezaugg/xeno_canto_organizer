@@ -108,23 +108,15 @@ class XCO():
             json.dump(dl_params, f,  indent=4)
 
 
-    def get(self, params_json, download = False):
+    def get_summary(self, params_json):
         """ 
-        Main function to download mp3 from XC, or just get a summary
+        get a summary
         """
-
-        main_download_path = os.path.join(self.start_path)
-        if not os.path.exists(main_download_path):
-            os.mkdir(main_download_path)
-
         # load parameters from json file 
         with open(os.path.join(self.start_path, params_json)) as f:
             dl_params = json.load(f)
 
         # retrieve meta data from XC web and select candidate files to be downloaded
-        print("") 
-        print("*******************************") 
-        print("Retrieving meta-data from xc ...")
         recs_pool = []
         for cnt in dl_params['country']:
             cnt_str = '+cnt:' + cnt
@@ -168,50 +160,47 @@ class XCO():
         
         # if length of recs_pool is > 0
         df_all = pd.DataFrame(recs_pool)
-        if download:
-            print("Writing meta-information to pkl ...") 
-            # Create directory to where files will be downloaded
-            source_path = os.path.join(main_download_path, self.download_tag + '_orig')
-            if not os.path.exists(source_path):
-                os.mkdir(source_path)
-        
-            # download 
-            print("Downloading files ...")
-            for re_i in recs_pool:
-                # re_i["also"] = ' + '.join(re_i["also"])
-                # full_download_string = 'http:' + re_i["file"]
-                full_download_string = re_i["file"]
-                # actually download files 
-                r = requests.get(full_download_string, allow_redirects=True)
-                # simplify and clean filename stem 
-                finam2 = re_i["file-name"].replace('.mp3', '')
-                finam2 = unidecode.unidecode(finam2)
-                finam2 = finam2.replace(' ', '_').replace('-', '_')
-                finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
-                tag =  re_i['gen'] + "_" + re_i['sp'] + '_'
-                finam2 = tag + finam2
-                # write file to disc
-                open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
-                # keep track of simplified name
-                re_i['downloaded_to_path'] = source_path
-                re_i['downloaded_to_file_stem'] = finam2
-            df_all_extended = pd.DataFrame(recs_pool)
-            df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
-            df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
-            df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
+        return(df_all, recs_pool)
 
-        # finally, print some summaries     
-        print("")
-        print("Details:")
-        df_all['full_spec_name'] = df_all['gen'] + ' ' +  df_all['sp']
-        print(pd.crosstab(df_all['full_spec_name'], df_all['cnt'], margins=True, dropna=False))
-        print("")
-        print(pd.crosstab(df_all['full_spec_name'], df_all['q'], margins=True, dropna=False))
-        print("")
-        print(df_all['lic'].value_counts())
-        print("*******************************") 
-        print("") 
 
+    def download(self, recs_pool):
+
+        main_download_path = os.path.join(self.start_path)
+        if not os.path.exists(main_download_path):
+            os.mkdir(main_download_path)
+
+        print("Writing meta-information to pkl ...") 
+        # Create directory to where files will be downloaded
+        source_path = os.path.join(main_download_path, self.download_tag + '_orig')
+        if not os.path.exists(source_path):
+            os.mkdir(source_path)
+    
+        # download 
+        print("Downloading files ...")
+        for re_i in recs_pool:
+            # re_i["also"] = ' + '.join(re_i["also"])
+            # full_download_string = 'http:' + re_i["file"]
+            full_download_string = re_i["file"]
+            # actually download files 
+            r = requests.get(full_download_string, allow_redirects=True)
+            # simplify and clean filename stem 
+            finam2 = re_i["file-name"].replace('.mp3', '')
+            finam2 = unidecode.unidecode(finam2)
+            finam2 = finam2.replace(' ', '_').replace('-', '_')
+            finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
+            tag =  re_i['gen'] + "_" + re_i['sp'] + '_'
+            finam2 = tag + finam2
+            # write file to disc
+            open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
+            # keep track of simplified name
+            re_i['downloaded_to_path'] = source_path
+            re_i['downloaded_to_file_stem'] = finam2
+        df_all_extended = pd.DataFrame(recs_pool)
+        df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
+        df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
+        df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
+
+    
 
     def mp3_to_wav(self, target_fs):
             """   
