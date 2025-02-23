@@ -96,7 +96,7 @@ However, the high-pass filters or the low-freq ambient noise will often be domin
 ![](./images/spectros_03.png)  
 
 
-
+## A
 
 
 
