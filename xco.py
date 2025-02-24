@@ -36,7 +36,9 @@ class XCO():
     # (1) helper functions
     
     def _convsec(self, x):
-        """Convert 'mm:ss' (str) to seconds (int)"""
+        """
+        Description : Convert 'mm:ss' (str) to seconds (int)
+        """
         x = x.split(':')
         x = int(x[0])*60 + int(x[1])
         return(x)
@@ -109,7 +111,9 @@ class XCO():
 
     def get_summary(self, params_json):
         """ 
-        get a summary
+        Description: Prepares a list of file to be downloaded, the list includes XC metadata
+        Arguments:   params_json (str) : Path to a json file (templates json can be created by XCO.make_param())
+        Returns:     df_recs (data frame) : A dataframe listing the files to be downloaded
         """
         # load parameters from json file 
         with open(os.path.join(self.start_path, params_json)) as f:
@@ -159,7 +163,9 @@ class XCO():
 
     def download(self, df_recs):
         """ 
-        Download 
+        Description : Downloads mp3 files from XCO.XC_API_URL and stores them in XCO.start_path
+        Arguments : df_recs (data frame) : A dataframe returned by XCO.get_summary()
+        Returns: Files are written to XCO.start_path; nothing is returned into Python session
         """
         main_download_path = os.path.join(self.start_path)
         if not os.path.exists(main_download_path):
@@ -203,9 +209,8 @@ class XCO():
     def mp3_to_wav(self, target_fs):
             """   
             Description : Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
-            Arguments :
-                target_fs : the sampling rate of the saved wav file  
-            Returns: Writes wav files to disc
+            Arguments :   target_fs : the sampling rate of the saved wav file  
+            Returns:      Writes wav files to disc
             """
             all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
             thedir = [a for a in all_dirs if "_orig" in a and self.download_tag in a][0]
