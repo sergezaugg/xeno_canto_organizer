@@ -36,10 +36,25 @@ class XCO():
     # (1) helper functions
     
     def _convsec(self, x):
-        """Convert 'mm:ss' (str) to seconds (int)"""
+        """
+        Description : Convert 'mm:ss' (str) to seconds (int)
+        """
         x = x.split(':')
         x = int(x[0])*60 + int(x[1])
         return(x)
+    
+
+    def _clean_xc_filenames(self, s):
+        """
+        Description : keep only alphanumeric characters in a strin and remove '.mp3'
+        """
+        stri = s.replace('.mp3', '')
+        stri = unidecode.unidecode(stri)
+        stri = stri.replace(' ', '_').replace('-', '_')
+        stri = re.sub(r'[^a-zA-Z0-9_]', '', stri)
+        return(stri)
+    # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
+
 
     def _read_piece_of_wav(self, f, start_sec, durat_sec): 
         """ 
@@ -109,12 +124,13 @@ class XCO():
 
     def get_summary(self, params_json):
         """ 
-        get a summary
+        Description: Prepares a list of file to be downloaded, the list includes XC metadata
+        Arguments:   params_json (str) : Path to a json file (templates json can be created by XCO.make_param())
+        Returns:     df_recs (data frame) : A dataframe listing the files to be downloaded
         """
         # load parameters from json file 
         with open(os.path.join(self.start_path, params_json)) as f:
             dl_params = json.load(f)
-
         # retrieve meta data from XC web and select candidate files to be downloaded
         recs_pool = []
         for cnt in dl_params['country']:
@@ -136,21 +152,9 @@ class XCO():
                 recs = [a for a in recs if a['q'] in dl_params['quality']]
                 # get meta-data as df from jsom 
                 _ = [a.pop('sono') for a in recs]
-                # replace "";"" by empty string in all values (needed for later export as csv)
-                self.recs = recs
-                if len(recs) > 0:
-                    for l in range(len(recs)):
-                        # print(recs[l]['rmk'])
-                        recs[l]["also"] = ' + '.join(recs[l]["also"])
-                        for k in recs[l].keys():
-                            # print(recs[l][k])
-                            try:
-                                recs[l][k] = recs[l][k].replace(';', '')
-                            except:
-                                3+3
-                        # print(recs[l]['rmk'])
+                if len(recs) <= 0:
+                    continue
                 recs_pool.extend(recs)
-
         # make df and return
         df_recs = pd.DataFrame(recs_pool)
         df_recs['full_spec_name'] = df_recs['gen'] + ' ' +  df_recs['sp']
@@ -159,53 +163,38 @@ class XCO():
 
     def download(self, df_recs):
         """ 
-        Download 
+        Description : Downloads mp3 files from XCO.XC_API_URL and stores them in XCO.start_path
+        Arguments : df_recs (data frame) : A dataframe returned by XCO.get_summary()
+        Returns: Files are written to XCO.start_path; nothing is returned into Python session
         """
-        main_download_path = os.path.join(self.start_path)
-        if not os.path.exists(main_download_path):
-            os.mkdir(main_download_path)
-
         # Create directory to where files will be downloaded
-        source_path = os.path.join(main_download_path, self.download_tag + '_orig')
+        source_path = os.path.join(self.start_path, self.download_tag + '_orig')
         if not os.path.exists(source_path):
             os.mkdir(source_path)
-    
-        for i,r in df_recs.iterrows():
-            # print(r)
-            re_i = r.to_dict()
+        # download one file for each row
+        for i,row_i in df_recs.iterrows():
+            re_i = row_i.to_dict()
             print("Downloading file: ", re_i["file-name"])
-
-            # for re_i in recs_pool:
-            # re_i["also"] = ' + '.join(re_i["also"])
-            # full_download_string = 'http:' + re_i["file"]
             full_download_string = re_i["file"]
             # actually download files 
-            r = requests.get(full_download_string, allow_redirects=True)
-            # simplify and clean filename stem 
-            finam2 = re_i["file-name"].replace('.mp3', '')
-            finam2 = unidecode.unidecode(finam2)
-            finam2 = finam2.replace(' ', '_').replace('-', '_')
-            finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
-            tag =  re_i['gen'] + "_" + re_i['sp'] + '_'
-            finam2 = tag + finam2
-            # write file to disc
-            open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
-            # keep track of simplified name
-            re_i['downloaded_to_path'] = source_path
-            re_i['downloaded_to_file_stem'] = finam2
+            rq = requests.get(full_download_string, allow_redirects=True)
+            # simplify and clean filename
+            finam2 = self._clean_xc_filenames(s = re_i["file-name"])
+            # add genus and species into filename
+            finam2 = re_i['gen'] + "_" + re_i['sp'] + '_' + finam2
+             # write file to disc
+            open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(rq.content)
         df_all_extended = df_recs
         df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
-        df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
-        df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
+        df_all_extended.to_pickle(os.path.join(self.start_path, self.download_tag + '_meta.pkl') )
 
     
 
     def mp3_to_wav(self, target_fs):
             """   
             Description : Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
-            Arguments :
-                target_fs : the sampling rate of the saved wav file  
-            Returns: Writes wav files to disc
+            Arguments :   target_fs : the sampling rate of the saved wav file  
+            Returns:      Writes wav files to disc
             """
             all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
             thedir = [a for a in all_dirs if "_orig" in a and self.download_tag in a][0]
@@ -232,7 +221,7 @@ class XCO():
 
 
 
-    def extract_spectrograms(self, target_fs, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  equalize = True, colormap = 'gray'):
+    def extract_spectrograms(self, target_fs, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  equalize = True, colormap = 'gray', eps = 1e-10):
         """
         Description : Process wav file by segments, for each segment makes a spectrogram, and saves a PNG
         Arguments : 
@@ -289,8 +278,6 @@ class XCO():
                 myFs = waveFile.getframerate()
                 totNsam = waveFile.getnframes()
                 totDurFile_s = totNsam / myFs
-                nchannels = waveFile.getnchannels()    
-                sampwidth = waveFile.getsampwidth()
                 waveFile.close()
 
                 # make sure fs is correct 
@@ -320,11 +307,11 @@ class XCO():
                             mode = 'psd')
                         # remove nyquist freq
                         X = X[:-1, :]
-                        # transpose and log 
+                        # transpose, equalize and log-transform 
                         X = np.flip(X, axis=0) # so that high freqs at top of image 
                         if equalize:
                             X = sound.median_equalizer(X) # equalize 
-                        X = np.log10(X)
+                        X = np.log10(X + eps)
                         # normalize 
                         X = X - X.min()
                         X = X/X.max()
@@ -374,12 +361,4 @@ if __name__ == "__main__":
     type(x_out)
     x_out.dtype
 
-    # """ 
-    # Description : aaa
-    # Arguments : bbb
-    # Returns : ccc
-    # """
-
-
-    sig_rand = np.random.uniform(size=int(78))  
-    sig_rand.tolist()
+ 

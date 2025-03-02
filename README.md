@@ -3,19 +3,21 @@
 **A python tool to prepare Xeno-Canto audio files for machine learning projects**
 * :construction:  Still under development :construction:
 * :warning: Running the code downloads mp3 files and creates derived files :warning:
-* Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecological and acoustical applications. 
-* However, the raw mp3 files cannot be directly used by machine learning (ML) processes. 
-* This tool allows to download, prepare and organize XC data such that it can be readily used by ML processes.
-* It includes data segmentation and feature extraction as spectrograms
 
-## Features
+### Summary
+Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecological and acoustical applications. 
+However, the raw mp3 files cannot be directly used by machine learning (ML) processes. 
+This tool allows to download, prepare and organize XC data such that it can be readily used by ML processes.
+It includes data segmentation and feature extraction as spectrograms.
+
+### Features
 * Check summaries before actual download
 * Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
 * Also stores the XC meta-data in PKL files that are easy to integrate with Python
 * Spectrogram parameters can be flexibly adjusted, eg. short or long spectrograms can be taken, FFT params can be set
 * Spectrogram are stored as PNG images which allows easy exploration and swift integration with established CNNs
 
-## Usage
+### Usage
 1. Make sure **ffmpg** and the Python packages are installed (see Dependencies and installation)
 2. Check **config.yaml** that the url to XC API is still valid
 3. Open **main.py** and run line-by-line at first to adjust the parameters
@@ -24,7 +26,7 @@
 6. :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
 
 
-## Sample code
+### Sample code
 Example of how preparation of data for an ML project can be handled with super-short Python script
 ```python
 

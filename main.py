@@ -3,6 +3,9 @@
 # Description : 
 # --------------
 
+import pandas as pd
+pd.set_option('display.max_rows', 100)
+pd.set_option('display.max_columns', 100)
 
 #----------------------
 # Minimalistic example. Downloads 10 files and makes 111 small spectrograms
@@ -20,7 +23,7 @@ xc.download(df_recs = df_records)
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(target_fs = 20000)
 # Extract spectrograms of fixed-length segments and store as PNG
-xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, equalize = False, colormap='viridis')
+xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, equalize = True, colormap='viridis', eps = 1e-10)
 
 
 #----------------------
