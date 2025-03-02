@@ -3,6 +3,9 @@
 # Description : 
 # --------------
 
+import pandas as pd
+pd.set_option('display.max_rows', 100)
+pd.set_option('display.max_columns', 100)
 
 #----------------------
 # Minimalistic example. Downloads 10 files and makes 111 small spectrograms

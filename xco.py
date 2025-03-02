@@ -42,6 +42,19 @@ class XCO():
         x = x.split(':')
         x = int(x[0])*60 + int(x[1])
         return(x)
+    
+
+    def _clean_xc_filenames(self, s):
+        """
+
+        """
+        stri = s.replace('.mp3', '')
+        stri = unidecode.unidecode(stri)
+        stri = stri.replace(' ', '_').replace('-', '_')
+        stri = re.sub(r'[^a-zA-Z0-9_]', '', stri)
+        return(stri)
+    # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
+
 
     def _read_piece_of_wav(self, f, start_sec, durat_sec): 
         """ 
@@ -118,7 +131,6 @@ class XCO():
         # load parameters from json file 
         with open(os.path.join(self.start_path, params_json)) as f:
             dl_params = json.load(f)
-
         # retrieve meta data from XC web and select candidate files to be downloaded
         recs_pool = []
         for cnt in dl_params['country']:
@@ -140,21 +152,9 @@ class XCO():
                 recs = [a for a in recs if a['q'] in dl_params['quality']]
                 # get meta-data as df from jsom 
                 _ = [a.pop('sono') for a in recs]
-                # replace "";"" by empty string in all values (needed for later export as csv)
-                self.recs = recs
-                if len(recs) > 0:
-                    for l in range(len(recs)):
-                        # print(recs[l]['rmk'])
-                        recs[l]["also"] = ' + '.join(recs[l]["also"])
-                        for k in recs[l].keys():
-                            # print(recs[l][k])
-                            try:
-                                recs[l][k] = recs[l][k].replace(';', '')
-                            except:
-                                3+3
-                        # print(recs[l]['rmk'])
+                if len(recs) <= 0:
+                    continue
                 recs_pool.extend(recs)
-
         # make df and return
         df_recs = pd.DataFrame(recs_pool)
         df_recs['full_spec_name'] = df_recs['gen'] + ' ' +  df_recs['sp']
@@ -167,42 +167,26 @@ class XCO():
         Arguments : df_recs (data frame) : A dataframe returned by XCO.get_summary()
         Returns: Files are written to XCO.start_path; nothing is returned into Python session
         """
-        main_download_path = os.path.join(self.start_path)
-        if not os.path.exists(main_download_path):
-            os.mkdir(main_download_path)
-
         # Create directory to where files will be downloaded
-        source_path = os.path.join(main_download_path, self.download_tag + '_orig')
+        source_path = os.path.join(self.start_path, self.download_tag + '_orig')
         if not os.path.exists(source_path):
             os.mkdir(source_path)
-    
-        for i,r in df_recs.iterrows():
-            # print(r)
-            re_i = r.to_dict()
+        # download one file for each row
+        for i,row_i in df_recs.iterrows():
+            re_i = row_i.to_dict()
             print("Downloading file: ", re_i["file-name"])
-
-            # for re_i in recs_pool:
-            # re_i["also"] = ' + '.join(re_i["also"])
-            # full_download_string = 'http:' + re_i["file"]
             full_download_string = re_i["file"]
             # actually download files 
-            r = requests.get(full_download_string, allow_redirects=True)
-            # simplify and clean filename stem 
-            finam2 = re_i["file-name"].replace('.mp3', '')
-            finam2 = unidecode.unidecode(finam2)
-            finam2 = finam2.replace(' ', '_').replace('-', '_')
-            finam2 = re.sub(r'[^a-zA-Z0-9_]', '', finam2)
-            tag =  re_i['gen'] + "_" + re_i['sp'] + '_'
-            finam2 = tag + finam2
-            # write file to disc
-            open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(r.content)
-            # keep track of simplified name
-            re_i['downloaded_to_path'] = source_path
-            re_i['downloaded_to_file_stem'] = finam2
+            rq = requests.get(full_download_string, allow_redirects=True)
+            # simplify and clean filename
+            finam2 = self._clean_xc_filenames(s = re_i["file-name"])
+            # add genus and species into filename
+            finam2 = re_i['gen'] + "_" + re_i['sp'] + '_' + finam2
+             # write file to disc
+            open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(rq.content)
         df_all_extended = df_recs
         df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
-        df_all_extended.to_csv(   os.path.join(main_download_path, self.download_tag + '_meta.csv') )
-        df_all_extended.to_pickle(os.path.join(main_download_path, self.download_tag + '_meta.pkl') )
+        df_all_extended.to_pickle(os.path.join(self.start_path, self.download_tag + '_meta.pkl') )
 
     
 
