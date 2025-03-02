@@ -46,7 +46,7 @@ class XCO():
 
     def _clean_xc_filenames(self, s):
         """
-
+        Description : keep only alphanumeric characters in a strin and remove '.mp3'
         """
         stri = s.replace('.mp3', '')
         stri = unidecode.unidecode(stri)
@@ -221,7 +221,7 @@ class XCO():
 
 
 
-    def extract_spectrograms(self, target_fs, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  equalize = True, colormap = 'gray'):
+    def extract_spectrograms(self, target_fs, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  equalize = True, colormap = 'gray', eps = 1e-10):
         """
         Description : Process wav file by segments, for each segment makes a spectrogram, and saves a PNG
         Arguments : 
@@ -278,8 +278,6 @@ class XCO():
                 myFs = waveFile.getframerate()
                 totNsam = waveFile.getnframes()
                 totDurFile_s = totNsam / myFs
-                nchannels = waveFile.getnchannels()    
-                sampwidth = waveFile.getsampwidth()
                 waveFile.close()
 
                 # make sure fs is correct 
@@ -309,11 +307,11 @@ class XCO():
                             mode = 'psd')
                         # remove nyquist freq
                         X = X[:-1, :]
-                        # transpose and log 
+                        # transpose, equalize and log-transform 
                         X = np.flip(X, axis=0) # so that high freqs at top of image 
                         if equalize:
                             X = sound.median_equalizer(X) # equalize 
-                        X = np.log10(X)
+                        X = np.log10(X + eps)
                         # normalize 
                         X = X - X.min()
                         X = X/X.max()
@@ -363,12 +361,4 @@ if __name__ == "__main__":
     type(x_out)
     x_out.dtype
 
-    # """ 
-    # Description : aaa
-    # Arguments : bbb
-    # Returns : ccc
-    # """
-
-
-    sig_rand = np.random.uniform(size=int(78))  
-    sig_rand.tolist()
+ 
