@@ -5,17 +5,17 @@
 # Possible use case : to do real work with deep neural networks for unsupervised clustering 
 import xco 
 # Make an instance of the XCO class and define the start path 
-xc = xco.XCO(start_path = 'C:/xc_real_projects/xc_aec_project_n_europe')
+# xc = xco.XCO(start_path = 'C:/xc_real_projects/xc_aec_project_n_europe')
+xc = xco.XCO(start_path = 'C:/xc_real_projects/xc_aec_project_sw_europe')
 # Check where data will be retrieved
 xc.XC_API_URL
 # Check where data will be written 
 xc.start_path
-
-
 # Create a template json parameter file (to be edited)
-xc.make_param(filename = 'download_n_europe.json', template = "n_europe")
+# xc.make_param(filename = 'download_n_europe.json', template = "n_europe")
+xc.make_param(filename = 'download_sw_europe.json', template = "sw_europe")
 # Get information of what will be downloaded
-df_records = xc.get_summary(params_json = 'download_n_europe.json')
+df_records = xc.get_summary(params_json = 'download_sw_europe.json')
 # make summary tables 
 print(df_records.shape)
 print(df_records['full_spec_name'].value_counts())
