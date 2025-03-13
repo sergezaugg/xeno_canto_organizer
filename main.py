@@ -4,8 +4,7 @@
 # --------------
 
 import pandas as pd
-pd.set_option('display.max_rows', 100)
-pd.set_option('display.max_columns', 100)
+import os
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
@@ -27,13 +26,15 @@ xc.mp3_to_wav(target_fs = 20000)
 # Extract spectrograms of fixed-length segments and store as PNG
 xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, equalize = True, colormap='viridis', eps = 1e-10)
 
-# temp 
-import os
-dd = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
 
-dd.head(3)
-dd.shape
-dd['file_name_stub'][5]
+# re-load and explore meta-data
+df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
+df_meta.head(3)
+df_meta.shape
+df_meta['file_name_stub'][10]
+
+
+
 
 
 #----------------------
