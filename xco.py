@@ -172,6 +172,7 @@ class XCO():
         if not os.path.exists(source_path):
             os.mkdir(source_path)
         # download one file for each row
+        new_filename = []
         for i,row_i in df_recs.iterrows():
             re_i = row_i.to_dict()
             print("Downloading file: ", re_i["file-name"])
@@ -184,7 +185,11 @@ class XCO():
             finam2 = re_i['gen'] + "_" + re_i['sp'] + '_' + finam2
              # write file to disc
             open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(rq.content)
+            new_filename.append(finam2)
+            # row_i['finam2'] = finam2
+        # print(new_filename)
         df_all_extended = df_recs
+        df_all_extended['file_name_stub'] = new_filename 
         df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
         df_all_extended.to_pickle(os.path.join(self.start_path, self.download_tag + '_meta.pkl') )
 
