@@ -29,9 +29,9 @@ xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5,
 
 # re-load and explore meta-data
 df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
-df_meta.head(3)
+df_meta.head()
 df_meta.shape
-df_meta['file_name_stub'][10]
+df_meta['file_name_stub'][1]
 
 
 
