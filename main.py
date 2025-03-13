@@ -6,6 +6,8 @@
 import pandas as pd
 pd.set_option('display.max_rows', 100)
 pd.set_option('display.max_columns', 100)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
 #----------------------
 # Minimalistic example. Downloads 10 files and makes 111 small spectrograms
@@ -24,6 +26,14 @@ xc.download(df_recs = df_records)
 xc.mp3_to_wav(target_fs = 20000)
 # Extract spectrograms of fixed-length segments and store as PNG
 xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, equalize = True, colormap='viridis', eps = 1e-10)
+
+# temp 
+import os
+dd = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
+
+dd.head(3)
+dd.shape
+dd['file_name_stub'][5]
 
 
 #----------------------
