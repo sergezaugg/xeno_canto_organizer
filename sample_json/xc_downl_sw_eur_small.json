@@ -1,0 +1,43 @@
+{
+    "min_duration_s": 8,
+    "max_duration_s": 12,
+    "quality": [
+        "A",
+        "B"
+    ],
+    "exclude_nd": true,
+    "country": [
+        "Switzerland",
+        "Austria",
+        "Czech Republic",
+        "Slovenia",
+        "Belgium",
+        "France",
+        "Germany",
+        "Italy",
+        "Portugal",
+        "Spain",
+        "Netherlands"
+    ],
+    "species": [
+        "Cyanistes cyanus",
+        "Periparus ater",
+        "Lophophanes cristatus",
+        "Cyanistes caeruleus",
+        "Parus major",
+        "Poecile cinctus",
+        "Poecile palustris",
+        "Poecile lugubris",
+        "Poecile montanus",
+        "Pyrrhocorax graculus",
+        "Coloeus dauuricus",
+        "Garrulus glandarius",
+        "Pica pica",
+        "Corvus cornix",
+        "Cyanopica cooki",
+        "Nucifraga caryocatactes",
+        "Corvus corax",
+        "Pyrrhocorax pyrrhocorax",
+        "Corvus frugilegus"
+    ]
+}
