@@ -296,7 +296,7 @@ class XCO():
                 
                 # loop over segments within file   
                 totNbSegments = int(totDurFile_s / segm_duration)  
-                for ii in  np.arange(0, (totNbSegments - 0.99), segm_step):
+                for ii in np.arange(0, (totNbSegments - 0.99), segm_step):
                     # print(ii)
                     try:
                         startSec = ii*segm_duration
@@ -332,7 +332,9 @@ class XCO():
                             im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
                         # print("PIL image size: ", im.size, im.mode)
                         # save as image 
-                        image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
+                        # image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
+                        startSec_str = "{:005.3f}".format(startSec).zfill(8) # make a fixed length string for start second
+                        image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(startSec_str) + ".png")
                         im.save(image_save_path)
                     except:
                         print("Error during loop over segments of wav file!")
