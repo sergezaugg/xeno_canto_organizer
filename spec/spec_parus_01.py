@@ -5,13 +5,13 @@
 # Make an instance of the XCO class and define the start path 
 import xco 
 
-xc = xco.XCO(start_path = 'C:/xc_real_projects/xc_sw_europe')
+xc = xco.XCO(start_path = 'C:/xc_real_projects/xc_parus_01')
 
 # Create a template json parameter file (to be edited)
-xc.make_param(filename = 'download_sw_europe_small.json', template = "sw_europe_small")
+# xc.make_param(filename = 'download_sw_europe_small.json', template = "sw_europe_small")
 
 # Get information of what will be downloaded
-df_records = xc.get_summary(params_json = 'download_sw_europe_small.json')
+df_records = xc.get_summary(params_json = 'download_parus_01.json')
 
 # make summary tables 
 print(df_records.shape)
@@ -37,13 +37,13 @@ xc.extract_spectrograms(target_fs = 24000, segm_duration = 0.394 , segm_step = 0
 
 
 
-import pandas as pd
-import os 
+# import pandas as pd
+# import os 
 
-# re-load and explore meta-data
-df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
-df_meta.head()
-df_meta.shape
-df_meta['file_name_stub'][100]
-df_meta.columns
+# # re-load and explore meta-data
+# df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
+# df_meta.head()
+# df_meta.shape
+# df_meta['file_name_stub'][100]
+# df_meta.columns
 
