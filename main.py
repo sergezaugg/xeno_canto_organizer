@@ -19,9 +19,6 @@ df_records = xc.get_summary(params_json = 'download_criteria.json')
 # Make summaries  
 print(df_records.shape)
 print(df_records.head(10))
-print(df_records['full_spec_name'].value_counts())
-print(df_records['cnt'].value_counts())
-print(df_records['lic'].value_counts())
 
 # Download the files 
 xc.download(df_recs = df_records)
