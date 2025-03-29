@@ -1,14 +1,18 @@
 # Xeno-Canto organizer 
 
 **A python tool to prepare Xeno-Canto audio files for machine learning projects**
-* :construction:  Still under development :construction:
-* :warning: Running the code downloads mp3 files and creates derived files :warning:
 
 ### Summary
-Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecological and acoustical applications. 
-However, the raw mp3 files cannot be directly used by machine learning (ML) processes. 
-This tool allows to download, prepare and organize XC data such that it can be readily used by ML processes.
-It includes data segmentation and feature extraction as spectrograms.
+* Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecological and acoustical applications. 
+* However, the raw mp3 files cannot be directly used by machine learning (ML) processes. 
+* This tool allows to download and prepare XC data for ML project.
+* It is a single class with a few methods for download, conversion, data segmentation and spectrograms extraction.
+* All intermediate and final files are written to single directory tree.
+* Thus, the complete download and preparation process can be handled in a small python script, see sample code below and **main.py**.
+* :warning: Running the code can download many mp3 files and creates derived files :warning:
+
+### Status
+* :construction: Still under development :construction:
 
 ### Features
 * Check summaries before actual download
@@ -17,19 +21,21 @@ It includes data segmentation and feature extraction as spectrograms.
 * Spectrogram parameters can be flexibly adjusted, eg. short or long spectrograms can be taken, FFT params can be set
 * Spectrogram are stored as PNG images which allows easy exploration and swift integration with established CNNs
 
-### Usage
-1. Make sure **ffmpg** and the Python packages are installed (see Dependencies and installation)
-2. Check **config.yaml** that the url to XC API is still valid
-3. Open **main.py** and run line-by-line at first to adjust the parameters
-4. Once **main.py** is ready, run the complete **main.py** 
-5. Result: metadata, mp3, wav, and spectrograms should be ready in their respective directories
-6. :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
+### Possible Usage
+1. Download this repo as zip and initialize a new .git to track you personal changes in **main.py**.
+2. Make sure **ffmpg** and Python packages are installed (see Dependencies and installation)
+3. Open **main.py** and first set the **start_path**, see sample code below. 
+4. Make a template JSON to define the download, see sample code. 
+5. Now you can edited this JSON according to your needs (species, countries, recording duration and quality)
+6. Run **main.py** line-by-line adjust the parameters of your data preparation. 
+7. Once **main.py** is ready, run the complete **main.py**.
+8. Result: metadata, mp3, wav, and spectrograms should be ready in their respective directories.
+9. :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
 
 
 ### Sample code
 Example of how preparation of data for an ML project can be handled with super-short Python script
 ```python
-
 #----------------------
 # minimalistic example
 import xco 
@@ -51,7 +57,7 @@ xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5,
 
 ## Illustration
 * The figure below is a snapshot of a few spectrograms obtained with this tool.
-    * Mp3 were converted to wav files with fs=24000
+    * MP3 were converted to wav files with fs=24000
     * Wav files were cut into short pieces of 1.0 seconds and spectrograms extracted via short time Fourier transform (STFT)
     * In this example, STFT window had 256 bins (Hamming) with 128 bins overlap
     * Spectrograms were equalized (optional, see appendix 2), log10 transformed and mapped to [0, 255]
@@ -59,25 +65,25 @@ xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5,
 
 ![](./images/spectros_02.png)  
 
-## Why save spectrogram of sounds as PNG images ?
-* Yes, for people working in acoustics this is a bit irritating
+## Why save spectrogram of sounds as PNG images
 * It is handy because many PyTorch models and data augmentation procedures can directly ingest PNGs
 * It is handy because images can be easily visualized with standard software
-* Export as binary numpy files is planned but not yet available.
 
 ## Dependencies and installation
-* This code will download data from the XC API https://www.xeno-canto.org/api/2/recordings
+* Needs internet access to download data from the XC API https://www.xeno-canto.org/api/2/recordings
 * Developed under Python 3.12.8
 * Install **ffmpg** (see for example https://ffmpeg.org)
-* Make a fresh venv and install the python packages 
-```
+* Make a fresh venv and install the python packages with pip: 
+```bash
 pip install -r requirements.txt
 ```
+
+## Hints
+* Check in **config.yaml** that the url to XC API is still valid
 
 ## Useful links
 * https://creativecommons.org/licenses/
 * https://xeno-canto.org/explore/api
-
 
 ## Limitation
 * Apparently, only 1 country and 1 species per request allowed by XC API
@@ -97,6 +103,13 @@ It is also possible to suppress equalization.
 However, the high-pass filters or the low-freq ambient noise will often be dominant.
 
 ![](./images/spectros_03.png)  
+
+
+
+
+
+
+
 
 
 

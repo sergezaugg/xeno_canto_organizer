@@ -1,7 +1,7 @@
-# """
-# Created 20231203
+# -------------
 # Author : Serge Zaugg
-# """
+# Description : Main functionality of this codebase
+# -------------
 
 import os
 import re
@@ -11,12 +11,11 @@ import pandas as pd
 import unidecode
 import numpy as np 
 import wave
-import pickle
 import scipy.signal as sgn 
 import matplotlib.pyplot as plt  
 from PIL import Image
 import struct
-from  maad import sound
+from maad import sound
 import subprocess
 import yaml
 
@@ -53,6 +52,7 @@ class XCO():
         stri = stri.replace(' ', '_').replace('-', '_')
         stri = re.sub(r'[^a-zA-Z0-9_]', '', stri)
         return(stri)
+    
     # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
 
 
@@ -114,6 +114,9 @@ class XCO():
                 dl_params = json.load(f)
         elif template == "sw_europe":
             with open(os.path.join('./sample_json/xc_downl_sw_europe.json')) as f:
+                dl_params = json.load(f)    
+        elif template == "sw_europe_small":
+            with open(os.path.join('./sample_json/xc_downl_sw_eur_small.json')) as f:
                 dl_params = json.load(f)    
         else:
             return("Please provide a valid value for argument 'template'")
@@ -255,7 +258,6 @@ class XCO():
             os.mkdir(path_destin)
         all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
         allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
-        # print(allWavFileNames)
 
         # pragmatically get time and frequency axes 
         sig_rand = np.random.uniform(size=int(segm_duration*target_fs))   
@@ -293,7 +295,7 @@ class XCO():
                 
                 # loop over segments within file   
                 totNbSegments = int(totDurFile_s / segm_duration)  
-                for ii in  np.arange(0, (totNbSegments - 0.99), segm_step):
+                for ii in np.arange(0, (totNbSegments - 0.99), segm_step):
                     # print(ii)
                     try:
                         startSec = ii*segm_duration
@@ -329,7 +331,9 @@ class XCO():
                             im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
                         # print("PIL image size: ", im.size, im.mode)
                         # save as image 
-                        image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
+                        # image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
+                        startSec_str = "{:005.3f}".format(startSec).zfill(8) # make a fixed length string for start second
+                        image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(startSec_str) + ".png")
                         im.save(image_save_path)
                     except:
                         print("Error during loop over segments of wav file!")
@@ -346,24 +350,6 @@ if __name__ == "__main__":
 
     plt.colormaps()
     
-    xc = XCO(start_path = 'C:/temp_xc_projects/proj04')
-    xc._convsec("44:55")
 
-    wavFileName = "C:/temp_xc_projects/proj04/downloaded_data_wav_24000sps/Corvus_coronoides_XC620107_2021_01_17_Corvus_coronoides2.wav"
-    # open wav file and get meta-information 
-    waveFile = wave.open(wavFileName, 'r')
-    myFs = waveFile.getframerate()
-    totNsam = waveFile.getnframes()
-    totDurFile_s = totNsam / myFs
-    nchannels = waveFile.getnchannels()    
-    sampwidth = waveFile.getsampwidth()
-    waveFile.close()
-    x_out = xc._read_piece_of_wav(
-        f = wavFileName, 
-        start_sec = 1.0, 
-        durat_sec = 2.0, 
-        )
-    type(x_out)
-    x_out.dtype
 
  
