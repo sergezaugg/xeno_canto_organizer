@@ -11,7 +11,6 @@ import pandas as pd
 import unidecode
 import numpy as np 
 import wave
-import pickle
 import scipy.signal as sgn 
 import matplotlib.pyplot as plt  
 from PIL import Image

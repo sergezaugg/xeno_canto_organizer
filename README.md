@@ -108,6 +108,21 @@ However, the high-pass filters or the low-freq ambient noise will often be domin
 
 
 
+pandas
+requests
+unidecode
+scipy
+matplotlib
+pip install scikit-maad
+
+
+
+
+
+
+
+
+
 
 
 
