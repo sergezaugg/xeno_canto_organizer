@@ -1,7 +1,7 @@
-# """
-# Created 20231203
+# -------------
 # Author : Serge Zaugg
-# """
+# Description : Main functionality of this codebase
+# -------------
 
 import os
 import re
@@ -16,7 +16,7 @@ import scipy.signal as sgn
 import matplotlib.pyplot as plt  
 from PIL import Image
 import struct
-from  maad import sound
+from maad import sound
 import subprocess
 import yaml
 
@@ -53,6 +53,7 @@ class XCO():
         stri = stri.replace(' ', '_').replace('-', '_')
         stri = re.sub(r'[^a-zA-Z0-9_]', '', stri)
         return(stri)
+    
     # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
 
 
@@ -258,7 +259,6 @@ class XCO():
             os.mkdir(path_destin)
         all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
         allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
-        # print(allWavFileNames)
 
         # pragmatically get time and frequency axes 
         sig_rand = np.random.uniform(size=int(segm_duration*target_fs))   
@@ -351,24 +351,6 @@ if __name__ == "__main__":
 
     plt.colormaps()
     
-    xc = XCO(start_path = 'C:/temp_xc_projects/proj04')
-    xc._convsec("44:55")
 
-    wavFileName = "C:/temp_xc_projects/proj04/downloaded_data_wav_24000sps/Corvus_coronoides_XC620107_2021_01_17_Corvus_coronoides2.wav"
-    # open wav file and get meta-information 
-    waveFile = wave.open(wavFileName, 'r')
-    myFs = waveFile.getframerate()
-    totNsam = waveFile.getnframes()
-    totDurFile_s = totNsam / myFs
-    nchannels = waveFile.getnchannels()    
-    sampwidth = waveFile.getsampwidth()
-    waveFile.close()
-    x_out = xc._read_piece_of_wav(
-        f = wavFileName, 
-        start_sec = 1.0, 
-        durat_sec = 2.0, 
-        )
-    type(x_out)
-    x_out.dtype
 
  
