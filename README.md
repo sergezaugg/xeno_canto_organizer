@@ -65,18 +65,16 @@ xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5,
 
 ![](./images/spectros_02.png)  
 
-## Why save spectrogram of sounds as PNG images ?
-* Yes, for people working in acoustics this is a bit irritating
+## Why save spectrogram of sounds as PNG images
 * It is handy because many PyTorch models and data augmentation procedures can directly ingest PNGs
 * It is handy because images can be easily visualized with standard software
-* Export as binary numpy files is planned but not yet available.
 
 ## Dependencies and installation
-* This code will download data from the XC API https://www.xeno-canto.org/api/2/recordings
+* Needs internet access to download data from the XC API https://www.xeno-canto.org/api/2/recordings
 * Developed under Python 3.12.8
 * Install **ffmpg** (see for example https://ffmpeg.org)
-* Make a fresh venv and install the python packages 
-```
+* Make a fresh venv and install the python packages with pip: 
+```bash
 pip install -r requirements.txt
 ```
 
