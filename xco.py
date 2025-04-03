@@ -229,7 +229,8 @@ class XCO():
 
 
 
-    def extract_spectrograms(self, target_fs, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  equalize = True, colormap = 'gray', eps = 1e-10):
+    def extract_spectrograms(self, target_fs, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  
+                             equalize = True, max_segm_per_file = 100, colormap = 'gray', eps = 1e-10):
         """
         Description : Process wav file by segments, for each segment makes a spectrogram, and saves a PNG
         Arguments : 
@@ -239,6 +240,7 @@ class XCO():
             win_siz (int) : Size in nb of bins of the FFT window used to compute the short-time fourier transform
             win_olap (int) : Size in nb of bins of the FFT window overlap
             equalize (Boolean) : Set True to apply equalization (suppresses stationary background noise), else set to False
+            max_segm_per_file (int) : limit the max number of segments extracted per file
             colormap (str) : 
                 Set to 'gray' to write one-channel images (default)
                 Other strings will map spectrogram to 3-channel color images e.g. 'viridis', 'inferno', 'magma', 'inferno', 'plasma', 'twilight' 
@@ -297,6 +299,8 @@ class XCO():
                 totNbSegments = int(totDurFile_s / segm_duration)  
                 for ii in np.arange(0, (totNbSegments - 0.99), segm_step):
                     # print(ii)
+                    if ii+1 >= max_segm_per_file:
+                        break 
                     try:
                         startSec = ii*segm_duration
                         sig = self._read_piece_of_wav(f = wavFileName, start_sec = startSec, durat_sec = segm_duration)
