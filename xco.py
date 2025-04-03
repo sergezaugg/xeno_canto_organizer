@@ -43,7 +43,7 @@ class XCO():
         return(x)
     
 
-    def _clean_xc_filenames(self, s):
+    def _clean_xc_filenames(self, s, max_string_size):
         """
         Description : keep only alphanumeric characters in a strin and remove '.mp3'
         """
@@ -51,6 +51,7 @@ class XCO():
         stri = unidecode.unidecode(stri)
         stri = stri.replace(' ', '_').replace('-', '_')
         stri = re.sub(r'[^a-zA-Z0-9_]', '', stri)
+        stri = stri[0:max_string_size]
         return(stri)
     
     # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
@@ -183,7 +184,7 @@ class XCO():
             # actually download files 
             rq = requests.get(full_download_string, allow_redirects=True)
             # simplify and clean filename
-            finam2 = self._clean_xc_filenames(s = re_i["file-name"])
+            finam2 = self._clean_xc_filenames(s = re_i["file-name"], max_string_size = 15)
             # add genus and species into filename
             finam2 = re_i['gen'] + "_" + re_i['sp'] + '_' + finam2
              # write file to disc
