@@ -200,16 +200,16 @@ class XCO():
 
     
 
-    def mp3_to_wav(self, target_fs):
+    def mp3_to_wav(self, conversion_fs):
             """   
             Description : Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
-            Arguments :   target_fs : the sampling rate of the saved wav file  
+            Arguments :   conversion_fs : the sampling rate of the saved wav file  
             Returns:      Writes wav files to disc
             """
             all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
             thedir = [a for a in all_dirs if "_orig" in a and self.download_tag in a][0]
             path_source = os.path.join(self.start_path, thedir)
-            path_destin = os.path.join(self.start_path, thedir.replace('_orig','_wav_' + str(target_fs) + 'sps'))
+            path_destin = os.path.join(self.start_path, thedir.replace('_orig','_wav_' + str(conversion_fs) + 'sps'))
             if not os.path.exists(path_destin):
                 os.mkdir(path_destin)
             all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
@@ -222,7 +222,7 @@ class XCO():
                     subprocess.call(['ffmpeg', 
                         '-y', # -y overwrite without asking 
                         '-i', patin, # '-i' # infile must be specifitd after -i
-                        '-ar', str(target_fs), # -ar rate set audio sampling rate (in Hz)
+                        '-ar', str(conversion_fs), # -ar rate set audio sampling rate (in Hz)
                         '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
                         paout
                         ])

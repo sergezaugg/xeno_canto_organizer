@@ -21,7 +21,7 @@ print(xc.df_recs.head(10))
 # Download the files 
 xc.download()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
-xc.mp3_to_wav(target_fs = 20000)
+xc.mp3_to_wav(conversion_fs = 20000)
 # Extract spectrograms of fixed-length segments and store as PNG
 xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis', eps = 1e-10)
 
@@ -31,18 +31,14 @@ xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5,
 
 
 
-import pandas as pd
-import os 
+# import pandas as pd
+# import os 
 
-# re-load and explore meta-data
-df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
-df_meta.head()
-df_meta.shape
-df_meta['file_name_stub'][8]
-df_meta.columns
-
-
-
-df_meta['file-name'][8]
-df_records['file-name']
+# # re-load and explore meta-data
+# df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
+# df_meta.head()
+# df_meta.shape
+# df_meta['file_name_stub'][8]
+# df_meta.columns
+# df_meta['file-name'][8]
 
