@@ -231,12 +231,12 @@ class XCO():
 
 
 
-    def extract_spectrograms(self, target_fs, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  
+    def extract_spectrograms(self, fs_tag, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  
                              equalize = True, max_segm_per_file = 100, colormap = 'gray', eps = 1e-10):
         """
         Description : Process wav file by segments, for each segment makes a spectrogram, and saves a PNG
         Arguments : 
-            target_fs (float) : If wav with different fs are available, this will force to use only one fs.
+            fs_tag (float) : If wav with different fs are available, this will force to use only one fs.
             segm_duration (float) : Duration of a segment in seconds
             segm_step (float) : Overlap between consecutive segments, 1.0 = no overlap, 0.5 = 50% overlap
             win_siz (int) : Size in nb of bins of the FFT window used to compute the short-time fourier transform
@@ -255,7 +255,16 @@ class XCO():
         #-------------------------------- 
         all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
         thedir = [a for a in all_dirs if "_wav_" in a and self.download_tag in a]
-        thedir = [a for a in thedir if str(target_fs) in a ][0]
+        thedir = [a for a in thedir if str(fs_tag) in a]
+
+        # check if dir exists
+        if len(thedir) <= 0:
+            print("WARNING - fs_tag is not equal to any of the dirs created with xco.mp3_to_wav()")
+            return(None)
+        else:
+            print("Proceeding ...")
+        
+        thedir = thedir[0] # why ?
         path_source = os.path.join(self.start_path,  thedir)
         path_destin = os.path.join(self.start_path,  thedir.replace('_wav_','_img_'))
         if not os.path.exists(path_destin):
@@ -264,12 +273,12 @@ class XCO():
         allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
 
         # pragmatically get time and frequency axes 
-        sig_rand = np.random.uniform(size=int(segm_duration*target_fs))   
-        f_axe, t_axe, _ = sgn.spectrogram(x = sig_rand, fs = target_fs, nperseg = win_siz, noverlap = win_olap, return_onesided = True)
+        sig_rand = np.random.uniform(size=int(segm_duration*fs_tag))   
+        f_axe, t_axe, _ = sgn.spectrogram(x = sig_rand, fs = fs_tag, nperseg = win_siz, noverlap = win_olap, return_onesided = True)
       
         # save parameters for later traceability
         params_dict = {
-            "sampling_frequency" : target_fs,
+            "sampling_frequency" : fs_tag,
             "segment_duration_sec" : segm_duration,
             "segment_step_size" : segm_step,
             "fft_window_size_bins" : win_siz,
@@ -292,8 +301,8 @@ class XCO():
                 waveFile.close()
 
                 # make sure fs is correct 
-                if myFs != target_fs:
-                    print("Wav file ignored because its sampling frequency is not equal to target_fs !  " + wavFileName)
+                if myFs != fs_tag:
+                    print("Wav file ignored because its sampling frequency is not equal to fs_tag !  " + wavFileName)
                     continue
                 print("Processing file: " + wavFileName)
                 

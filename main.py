@@ -21,9 +21,9 @@ print(xc.df_recs.head(10))
 # Download the files 
 xc.download()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
-xc.mp3_to_wav(conversion_fs = 20000)
+xc.mp3_to_wav(conversion_fs = 12000)
 # Extract spectrograms of fixed-length segments and store as PNG
-xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis', eps = 1e-10)
+xc.extract_spectrograms(fs_tag = 12000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis', eps = 1e-10)
 
 
 
