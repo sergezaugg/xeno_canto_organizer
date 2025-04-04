@@ -30,6 +30,7 @@ class XCO():
         self.XC_API_URL = conf['XC_API_URL']
         self.start_path = start_path 
         self.download_tag = 'downloaded_data'  
+        self.df_recs = "not yet initializes"
 
     #----------------------------------
     # (1) helper functions
@@ -160,12 +161,12 @@ class XCO():
                     continue
                 recs_pool.extend(recs)
         # make df and return
-        df_recs = pd.DataFrame(recs_pool)
-        df_recs['full_spec_name'] = df_recs['gen'] + ' ' +  df_recs['sp']
-        return(df_recs)
+        self.df_recs = pd.DataFrame(recs_pool)
+        self.df_recs['full_spec_name'] = self.df_recs['gen'] + ' ' +  self.df_recs['sp']
+        # return(df_recs)
 
 
-    def download(self, df_recs):
+    def download(self):
         """ 
         Description : Downloads mp3 files from XCO.XC_API_URL and stores them in XCO.start_path
         Arguments : df_recs (data frame) : A dataframe returned by XCO.get_summary()
@@ -177,22 +178,22 @@ class XCO():
             os.mkdir(source_path)
         # download one file for each row
         new_filename = []
-        for i,row_i in df_recs.iterrows():
+        for i,row_i in self.df_recs.iterrows():
             re_i = row_i.to_dict()
             print("Downloading file: ", re_i["file-name"])
             full_download_string = re_i["file"]
             # actually download files 
             rq = requests.get(full_download_string, allow_redirects=True)
             # simplify and clean filename
-            finam2 = self._clean_xc_filenames(s = re_i["file-name"], max_string_size = 15)
+            finam2 = self._clean_xc_filenames(s = re_i["file-name"], max_string_size = 30)
             # add genus and species into filename
-            finam2 = re_i['gen'] + "_" + re_i['sp'] + '_' + finam2
+            # finam2 = re_i['gen'] + "_" + re_i['sp'] + '_' + finam2
              # write file to disc
             open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(rq.content)
             new_filename.append(finam2)
             # row_i['finam2'] = finam2
         # print(new_filename)
-        df_all_extended = df_recs
+        df_all_extended = self.df_recs
         df_all_extended['file_name_stub'] = new_filename 
         df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
         df_all_extended.to_pickle(os.path.join(self.start_path, self.download_tag + '_meta.pkl') )
