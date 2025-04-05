@@ -37,3 +37,20 @@ xc.extract_spectrograms(fs_tag = 16000, segm_duration = 1.0, segm_step = 0.5, wi
 df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
 df_meta.head()
 
+
+
+
+# Make spectrogram with size = 128 x 128 
+xc.extract_spectrograms(fs_tag = 24000, segm_duration = 0.202, segm_step = 0.5, win_siz = 256, win_olap = 220.5, max_segm_per_file = 20, equalize = True, colormap='gray')
+
+# Make long spectrogram 128 freq x 1152 time (1024+128= 1152)
+xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.738, segm_step = 0.95, win_siz = 256, win_olap = 220.00, max_segm_per_file = 20, equalize = True, colormap='gray')
+
+# Make rectangular spectrogram with size = 128 freq x 256 time 
+xc.extract_spectrograms(fs_tag = 24000, segm_duration = 0.394 , segm_step = 0.25, win_siz = 256, win_olap = 220.5, max_segm_per_file = 20, equalize = True, colormap='gray')
+
+
+
+
+
+
