@@ -25,14 +25,14 @@ xc.get_summary(params_json = 'download_criteria.json')
 print(xc.df_recs.shape)
 print(xc.df_recs.head(10))
 # keep only if fs large enough 
-sel = xc.df_recs['smp'].astype(int)>= 48000
+sel = xc.df_recs['smp'].astype(int)>= 24000
 xc.df_recs = xc.df_recs[sel]
 # Download the files 
 xc.download()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
-xc.mp3_to_wav(conversion_fs = 16000)
+xc.mp3_to_wav(conversion_fs = 24000)
 # Extract spectrograms from segments and store as PNG
-xc.extract_spectrograms(fs_tag = 16000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis', eps = 1e-10)
+xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis', eps = 1e-10)
 # Re-load and explore meta-data
 df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
 df_meta.head()

@@ -44,26 +44,27 @@ xc = xco.XCO(start_path = 'C:/<path where data will be stored>')
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json', template = "mini")
 # Get information of what will be downloaded
-df_records = xc.get_summary(params_json = 'download_criteria.json')
-# make summaries  
-print(df_records.shape)
-# Download the files 
-xc.download(df_recs = df_records)
+xc.get_summary(params_json = 'download_criteria.json')
+# Make summaries  
+print(xc.df_recs.shape)
+xc.download()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
-xc.mp3_to_wav(target_fs = 20000)
-# Extract spectrograms of fixed-length segments and store as PNG
-xc.extract_spectrograms(target_fs = 20000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, equalize = False, colormap='viridis')
+xc.mp3_to_wav(conversion_fs = 24000)
+# Extract spectrograms from segments and store as PNG
+xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis')
+
 ```
 
 ## Illustration
-* The figure below is a snapshot of a few spectrograms obtained with this tool.
-    * MP3 were converted to wav files with fs=24000
-    * Wav files were cut into short pieces of 1.0 seconds and spectrograms extracted via short time Fourier transform (STFT)
-    * In this example, STFT window had 256 bins (Hamming) with 128 bins overlap
-    * Spectrograms were equalized (optional, see appendix 2), log10 transformed and mapped to [0, 255]
-    * They can be exported as 1-channel images (here) or 3-channel color images (appendix 1)
+* The figure below is a snapshot of a few spectrograms obtained with this tool
+* MP3 were converted to wav files with fs=24000
+* Wav files were cut into short pieces and spectrograms extracted via short time Fourier transform (STFT)
+* Spectrograms were equalized, log10 transformed and mapped to [0, 255]
+* They can be exported as 1-channel or 3-channel images (this example)
+* 3-channel is an overkill but easier to be ingested by Image CNNs such as ResNet, EfficientNet an co
 
-![](./images/spectros_02.png)  
+![](./images/spectros_01.png)  
+
 
 ## Why save spectrogram of sounds as PNG images
 * It is handy because many PyTorch models and data augmentation procedures can directly ingest PNGs
@@ -88,21 +89,6 @@ pip install -r requirements.txt
 ## Limitation
 * Apparently, only 1 country and 1 species per request allowed by XC API
 * Only 1 request per second allowed by XC API
-
-
-## Appendix 1
-
-It is also possible to extract 3-channel RGB images, e.g to be directly ingested by Image CNNs such as ResNet, EfficintNet an co
-
-![](./images/spectros_01.png)  
-
-
-## Appendix 2
-
-It is also possible to suppress equalization. 
-However, the high-pass filters or the low-freq ambient noise will often be dominant.
-
-![](./images/spectros_03.png)  
 
 
 
