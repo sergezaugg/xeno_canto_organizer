@@ -18,8 +18,8 @@
 * Check summaries before actual download
 * Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
 * Also stores the XC meta-data in PKL files that are easy to integrate with Python
-* Spectrogram parameters can be flexibly adjusted, eg. short or long spectrograms can be taken, FFT params can be set
-* Spectrogram are stored as PNG images which allows easy exploration and swift integration with established CNNs
+* Spectrogram parameters can be flexibly adjusted
+* Spectrogram stored as PNG images for easy exploration and ingestion by established CNNs
 
 ### Possible Usage
 1. Download this repo as zip and initialize a new .git to track you personal changes in **main.py**.
@@ -58,11 +58,10 @@ xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, wi
 
 ## Illustration
 * The figure below is a snapshot of a few spectrograms obtained with this tool
-* MP3 were converted to wav files with fs=24000
-* Wav files were cut into short pieces and spectrograms extracted via short time Fourier transform (STFT)
+* MP3 were converted to wav files with a fixed sampling frequency
+* Wav files were cut into pieces and spectrograms extracted 
 * Spectrograms were equalized, log10 transformed and mapped to [0, 255]
-* They can be exported as 1-channel or 3-channel images (this example)
-* 3-channel is an overkill but easier to be ingested by Image CNNs such as ResNet, EfficientNet an co
+* They were exported as 1-channel or 3-channel images
 
 ![](./images/spectros_01.png)  
 
@@ -70,6 +69,7 @@ xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, wi
 ## Why save spectrogram of sounds as PNG images
 * It is handy because many PyTorch models and data augmentation procedures can directly ingest PNGs
 * It is handy because images can be easily visualized with standard software
+* Yes, 3-channel is an overkill but easier to be ingested by Image CNNs such as ResNet and co
 
 ## Dependencies and installation
 * Needs internet access to download data from the XC API https://www.xeno-canto.org/api/2/recordings
