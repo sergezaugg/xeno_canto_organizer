@@ -105,7 +105,7 @@ class XCO():
         Description: Create a template download parameters file 
         Arguments:
             filename: (str), file name ending in .json
-            template: (str), which template to use. Valid values are "mini", "n_europe", "sw_europe"
+            template: (str), which template to use. Valid values are "mini", "n_europe", "sw_europe", "parus"
         Returns: Writes a json file to disc
         """
         if template == "mini":
@@ -119,7 +119,10 @@ class XCO():
                 dl_params = json.load(f)    
         elif template == "sw_europe_small":
             with open(os.path.join('./sample_json/xc_downl_sw_eur_small.json')) as f:
-                dl_params = json.load(f)    
+                dl_params = json.load(f)  
+        elif template == "parus":
+            with open(os.path.join('./sample_json/xc_downl_parus.json')) as f:
+                dl_params = json.load(f)      
         else:
             return("Please provide a valid value for argument 'template'")
     

@@ -11,7 +11,6 @@ import xco
 # make a projects dir, if it does not already exist
 if not os.path.isdir('./temp_xc_project'):
     os.makedirs('./temp_xc_project')
-
 # Make an instance of the XCO class and define the start path 
 xc = xco.XCO(start_path = './temp_xc_project')
 # Check where data will be retrieved
@@ -32,12 +31,9 @@ xc.df_recs = xc.df_recs[sel]
 xc.download()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(conversion_fs = 16000)
-# Extract spectrograms of fixed-length segments and store as PNG
+# Extract spectrograms from segments and store as PNG
 xc.extract_spectrograms(fs_tag = 16000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis', eps = 1e-10)
-
-
-
-# re-load and explore meta-data
+# Re-load and explore meta-data
 df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
 df_meta.head()
 
