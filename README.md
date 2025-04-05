@@ -47,6 +47,7 @@ xc.make_param(filename = 'download_criteria.json', template = "mini")
 xc.get_summary(params_json = 'download_criteria.json')
 # Make summaries  
 print(xc.df_recs.shape)
+# Download the files 
 xc.download()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(conversion_fs = 24000)
