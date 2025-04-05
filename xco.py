@@ -18,6 +18,8 @@ import struct
 from maad import sound
 import subprocess
 import yaml
+import datetime
+
 
 class XCO():
 
@@ -269,7 +271,12 @@ class XCO():
         
         thedir = thedir[0] # why ?
         path_source = os.path.join(self.start_path,  thedir)
-        path_destin = os.path.join(self.start_path,  thedir.replace('_wav_','_img_'))
+        # old 
+        # path_destin = os.path.join(self.start_path,  thedir.replace('_wav_','_img_'))
+        # new 
+        tstmp = datetime.datetime.now().strftime("_%Y%m%d_%H%M%S")
+        path_destin = os.path.join(self.start_path,  'images_' + str(fs_tag) + 'sps' + tstmp)
+
         if not os.path.exists(path_destin):
             os.mkdir(path_destin)
         all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
