@@ -1,0 +1,34 @@
+{
+    "min_duration_s": 5,
+    "max_duration_s": 50,
+    "quality": [
+        "A",
+        "B",
+        "C"
+    ],
+    "exclude_nd": true,
+    "country": [
+        "Switzerland",
+        "Austria",
+        "Czech Republic",
+        "Slovenia",
+        "Belgium",
+        "France",
+        "Germany",
+        "Italy",
+        "Portugal",
+        "Spain",
+        "Netherlands",
+        "Sweden",
+        "Denmark",
+        "Finland",
+        "Norway",
+        "Latvia",
+        "Lithuania",
+        "Estonia",
+        "Poland"
+    ],
+    "species": [
+        "Parus major" 
+    ]
+}

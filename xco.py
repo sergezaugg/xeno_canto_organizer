@@ -18,6 +18,8 @@ import struct
 from maad import sound
 import subprocess
 import yaml
+import datetime
+
 
 class XCO():
 
@@ -30,6 +32,7 @@ class XCO():
         self.XC_API_URL = conf['XC_API_URL']
         self.start_path = start_path 
         self.download_tag = 'downloaded_data'  
+        self.df_recs = "not yet initializes"
 
     #----------------------------------
     # (1) helper functions
@@ -104,7 +107,7 @@ class XCO():
         Description: Create a template download parameters file 
         Arguments:
             filename: (str), file name ending in .json
-            template: (str), which template to use. Valid values are "mini", "n_europe", "sw_europe"
+            template: (str), which template to use. Valid values are "mini", "n_europe", "sw_europe", "parus"
         Returns: Writes a json file to disc
         """
         if template == "mini":
@@ -118,7 +121,10 @@ class XCO():
                 dl_params = json.load(f)    
         elif template == "sw_europe_small":
             with open(os.path.join('./sample_json/xc_downl_sw_eur_small.json')) as f:
-                dl_params = json.load(f)    
+                dl_params = json.load(f)  
+        elif template == "parus":
+            with open(os.path.join('./sample_json/xc_downl_parus.json')) as f:
+                dl_params = json.load(f)      
         else:
             return("Please provide a valid value for argument 'template'")
     
@@ -160,12 +166,12 @@ class XCO():
                     continue
                 recs_pool.extend(recs)
         # make df and return
-        df_recs = pd.DataFrame(recs_pool)
-        df_recs['full_spec_name'] = df_recs['gen'] + ' ' +  df_recs['sp']
-        return(df_recs)
+        self.df_recs = pd.DataFrame(recs_pool)
+        self.df_recs['full_spec_name'] = self.df_recs['gen'] + ' ' +  self.df_recs['sp']
+        # return(df_recs)
 
 
-    def download(self, df_recs):
+    def download(self):
         """ 
         Description : Downloads mp3 files from XCO.XC_API_URL and stores them in XCO.start_path
         Arguments : df_recs (data frame) : A dataframe returned by XCO.get_summary()
@@ -177,38 +183,38 @@ class XCO():
             os.mkdir(source_path)
         # download one file for each row
         new_filename = []
-        for i,row_i in df_recs.iterrows():
+        for i,row_i in self.df_recs.iterrows():
             re_i = row_i.to_dict()
             print("Downloading file: ", re_i["file-name"])
             full_download_string = re_i["file"]
             # actually download files 
             rq = requests.get(full_download_string, allow_redirects=True)
             # simplify and clean filename
-            finam2 = self._clean_xc_filenames(s = re_i["file-name"], max_string_size = 15)
+            finam2 = self._clean_xc_filenames(s = re_i["file-name"], max_string_size = 30)
             # add genus and species into filename
-            finam2 = re_i['gen'] + "_" + re_i['sp'] + '_' + finam2
+            # finam2 = re_i['gen'] + "_" + re_i['sp'] + '_' + finam2
              # write file to disc
             open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(rq.content)
             new_filename.append(finam2)
             # row_i['finam2'] = finam2
         # print(new_filename)
-        df_all_extended = df_recs
+        df_all_extended = self.df_recs
         df_all_extended['file_name_stub'] = new_filename 
         df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
         df_all_extended.to_pickle(os.path.join(self.start_path, self.download_tag + '_meta.pkl') )
 
     
 
-    def mp3_to_wav(self, target_fs):
+    def mp3_to_wav(self, conversion_fs):
             """   
             Description : Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
-            Arguments :   target_fs : the sampling rate of the saved wav file  
+            Arguments :   conversion_fs : the sampling rate of the saved wav file  
             Returns:      Writes wav files to disc
             """
             all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
             thedir = [a for a in all_dirs if "_orig" in a and self.download_tag in a][0]
             path_source = os.path.join(self.start_path, thedir)
-            path_destin = os.path.join(self.start_path, thedir.replace('_orig','_wav_' + str(target_fs) + 'sps'))
+            path_destin = os.path.join(self.start_path, thedir.replace('_orig','_wav_' + str(conversion_fs) + 'sps'))
             if not os.path.exists(path_destin):
                 os.mkdir(path_destin)
             all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
@@ -221,7 +227,7 @@ class XCO():
                     subprocess.call(['ffmpeg', 
                         '-y', # -y overwrite without asking 
                         '-i', patin, # '-i' # infile must be specifitd after -i
-                        '-ar', str(target_fs), # -ar rate set audio sampling rate (in Hz)
+                        '-ar', str(conversion_fs), # -ar rate set audio sampling rate (in Hz)
                         '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
                         paout
                         ])
@@ -230,12 +236,12 @@ class XCO():
 
 
 
-    def extract_spectrograms(self, target_fs, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  
+    def extract_spectrograms(self, fs_tag, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  
                              equalize = True, max_segm_per_file = 100, colormap = 'gray', eps = 1e-10):
         """
         Description : Process wav file by segments, for each segment makes a spectrogram, and saves a PNG
         Arguments : 
-            target_fs (float) : If wav with different fs are available, this will force to use only one fs.
+            fs_tag (float) : If wav with different fs are available, this will force to use only one fs.
             segm_duration (float) : Duration of a segment in seconds
             segm_step (float) : Overlap between consecutive segments, 1.0 = no overlap, 0.5 = 50% overlap
             win_siz (int) : Size in nb of bins of the FFT window used to compute the short-time fourier transform
@@ -254,30 +260,47 @@ class XCO():
         #-------------------------------- 
         all_dirs = next(os.walk(os.path.join(self.start_path)))[1]
         thedir = [a for a in all_dirs if "_wav_" in a and self.download_tag in a]
-        thedir = [a for a in thedir if str(target_fs) in a ][0]
+        thedir = [a for a in thedir if str(fs_tag) in a]
+
+        # check if dir exists
+        if len(thedir) <= 0:
+            print("WARNING - fs_tag is not equal to any of the dirs created with xco.mp3_to_wav()")
+            return(None)
+        else:
+            print("Proceeding ...")
+        
+        thedir = thedir[0] # why ?
         path_source = os.path.join(self.start_path,  thedir)
-        path_destin = os.path.join(self.start_path,  thedir.replace('_wav_','_img_'))
+        # old 
+        # path_destin = os.path.join(self.start_path,  thedir.replace('_wav_','_img_'))
+        # new 
+        tstmp = datetime.datetime.now().strftime("_%Y%m%d_%H%M%S")
+        path_destin = os.path.join(self.start_path,  'images_' + str(fs_tag) + 'sps' + tstmp)
+
         if not os.path.exists(path_destin):
             os.mkdir(path_destin)
         all_wavs = [a for a in os.listdir(path_source) if "wav" in a]
         allWavFileNames = [os.path.join(path_source, a) for a in all_wavs]
 
         # pragmatically get time and frequency axes 
-        sig_rand = np.random.uniform(size=int(segm_duration*target_fs))   
-        f_axe, t_axe, _ = sgn.spectrogram(x = sig_rand, fs = target_fs, nperseg = win_siz, noverlap = win_olap, return_onesided = True)
+        sig_rand = np.random.uniform(size=int(segm_duration*fs_tag))   
+        f_axe, t_axe, _ = sgn.spectrogram(x = sig_rand, fs = fs_tag, nperseg = win_siz, noverlap = win_olap, return_onesided = True)
       
         # save parameters for later traceability
         params_dict = {
-            "sampling_frequency" : target_fs,
+            "sampling_frequency" : fs_tag,
             "segment_duration_sec" : segm_duration,
             "segment_step_size" : segm_step,
             "fft_window_size_bins" : win_siz,
             "fft_window_overlap_bins" : win_olap,
             "colormap" : colormap,
+            "equalize" : equalize,
+            "max_segm_per_file" : max_segm_per_file,
+            "eps" : eps,
             "frequency_axis" : f_axe.tolist(),
             "time_axis" : t_axe.tolist(),
             }
-        with open(os.path.join(path_destin, "feature_extraction_parameters.json"), 'w') as f:
+        with open(os.path.join(path_destin, "_feature_extraction_parameters.json"), 'w') as f:
             json.dump(params_dict, f, indent=4)    
 
         # loop over wav files 
@@ -291,8 +314,8 @@ class XCO():
                 waveFile.close()
 
                 # make sure fs is correct 
-                if myFs != target_fs:
-                    print("Wav file ignored because its sampling frequency is not equal to target_fs !  " + wavFileName)
+                if myFs != fs_tag:
+                    print("Wav file ignored because its sampling frequency is not equal to fs_tag !  " + wavFileName)
                     continue
                 print("Processing file: " + wavFileName)
                 
