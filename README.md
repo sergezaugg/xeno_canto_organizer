@@ -3,35 +3,34 @@
 **A python tool to prepare Xeno-Canto audio files for machine learning projects**
 
 ### Summary
-* Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecological and acoustical applications. 
-* However, the raw mp3 files cannot be directly used by machine learning (ML) processes. 
+* Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecology and bio-acoustics applications. 
+* However, the mp3 files cannot be directly used for machine learning (ML). 
 * This tool allows to download and prepare XC data for ML project.
 * It is a single class with a few methods for download, conversion, data segmentation and spectrograms extraction.
-* All intermediate and final files are written to single directory tree.
 * Thus, the complete download and preparation process can be handled in a small python script, see sample code below and **main.py**.
-* :warning: Running the code can download many mp3 files and creates derived files :warning:
+* All intermediate and final items are written to files in a single directory tree.
+* :warning: Running the code can download many mp3 files :warning:
 
 ### Status
 * :construction: Still under development :construction:
 
 ### Features
-* Check summaries before actual download
+* Summaries can be checked before actual download
 * Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
 * Also stores the XC meta-data in PKL files that are easy to integrate with Python
 * Spectrogram parameters can be flexibly adjusted
 * Spectrogram stored as PNG images for easy exploration and ingestion by established CNNs
 
-### Possible Usage
+### Usage
 1. Download this repo as zip and initialize a new .git to track you personal changes in **main.py**.
 2. Make sure **ffmpg** and Python packages are installed (see Dependencies and installation)
-3. Open **main.py** and first set the **start_path**, see sample code below. 
+3. Open **main.py** and set the a **start_path**, see sample code below. 
 4. Make a template JSON to define the download, see sample code. 
-5. Now you can edited this JSON according to your needs (species, countries, recording duration and quality)
-6. Run **main.py** line-by-line adjust the parameters of your data preparation. 
+5. Edit the JSON according to your needs (species, countries, recording duration and quality)
+6. Run **main.py** line-by-line, check the files that are generated, adjust the parameters of your data preparation. 
 7. Once **main.py** is ready, run the complete **main.py**.
 8. Result: metadata, mp3, wav, and spectrograms should be ready in their respective directories.
 9. :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
-
 
 ### Sample code
 Example of how preparation of data for an ML project can be handled with super-short Python script
@@ -60,8 +59,8 @@ xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, wi
 * The figure below is a snapshot of a few spectrograms obtained with this tool
 * MP3 were converted to wav files with a fixed sampling frequency
 * Wav files were cut into pieces and spectrograms extracted 
-* Spectrograms were equalized, log10 transformed and mapped to [0, 255]
-* They were exported as 1-channel or 3-channel images
+* Spectrograms were equalized, log10-transformed and mapped to [0, 255]
+* Can be exported as 1-channel or 3-channel images
 
 ![](./images/spectros_01.png)  
 
