@@ -1,7 +1,7 @@
 # --------------
 # Author : Serge Zaugg
-# Description : Example of xco usage in practice just as a demo
-# For a real project use a dir outside if this repo
+# Description : Small demo example of xco usage in practice
+# For real projects please use a dir outside if this repo
 # --------------
 
 import os

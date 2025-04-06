@@ -294,10 +294,13 @@ class XCO():
             "fft_window_size_bins" : win_siz,
             "fft_window_overlap_bins" : win_olap,
             "colormap" : colormap,
+            "equalize" : equalize,
+            "max_segm_per_file" : max_segm_per_file,
+            "eps" : eps,
             "frequency_axis" : f_axe.tolist(),
             "time_axis" : t_axe.tolist(),
             }
-        with open(os.path.join(path_destin, "feature_extraction_parameters.json"), 'w') as f:
+        with open(os.path.join(path_destin, "_feature_extraction_parameters.json"), 'w') as f:
             json.dump(params_dict, f, indent=4)    
 
         # loop over wav files 
