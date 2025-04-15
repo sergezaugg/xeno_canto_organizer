@@ -5,11 +5,11 @@
 
 # Make an instance of the XCO class and define the start path 
 import xco 
-xc = xco.XCO(start_path = 'd:/xc_real_projects/xc_sw_europe')
+xc = xco.XCO(start_path = 'd:/xc_real_projects/xc_corvidae_01')
 # Create a template json parameter file (to be edited)
-xc.make_param(filename = 'download_sw_europe.json', template = "sw_europe")
+xc.make_param(filename = 'download_corvidea.json', template = "corvidae")
 # Get information of what will be downloaded
-xc.get_summary(params_json = 'download_sw_europe.json')
+xc.get_summary(params_json = 'download_corvidea.json')
 # make summary tables 
 print(xc.df_recs.shape)
 # keep only if fs large enough 

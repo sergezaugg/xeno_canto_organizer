@@ -125,6 +125,9 @@ class XCO():
         elif template == "parus":
             with open(os.path.join('./sample_json/xc_downl_parus.json')) as f:
                 dl_params = json.load(f)      
+        elif template == "corvidae":
+            with open(os.path.join('./sample_json/xc_downl_corvidae.json')) as f:
+                dl_params = json.load(f)      
         else:
             return("Please provide a valid value for argument 'template'")
     

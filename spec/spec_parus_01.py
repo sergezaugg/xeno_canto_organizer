@@ -5,7 +5,7 @@
 
 # Make an instance of the XCO class and define the start path 
 import xco 
-xc = xco.XCO(start_path = 'C:/xc_real_projects/xc_parus_01')
+xc = xco.XCO(start_path = 'd:/xc_real_projects/xc_parus_01')
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_parus_real.json', template = "parus")
 # Get information of what will be downloaded

@@ -5,7 +5,7 @@
 
 # Make an instance of the XCO class and define the start path 
 import xco 
-xc = xco.XCO(start_path = 'C:/xc_real_projects/xc_ne_europe')
+xc = xco.XCO(start_path = 'd:/xc_real_projects/xc_ne_europe')
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_ne_europe.json', template = "n_europe")
 # Get information of what will be downloaded
