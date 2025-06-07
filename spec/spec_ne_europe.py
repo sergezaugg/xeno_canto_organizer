@@ -20,6 +20,6 @@ xc.download()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(conversion_fs = 24000)
 # Make long spectrogram 128 freq x 1152 time (1024+128= 1152)
-xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.738, segm_step = 0.95, win_siz = 256, win_olap = 220.00, max_segm_per_file = 20, equalize = True, colormap='gray')
+xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.738, segm_step = 0.95, win_siz = 256, win_olap = 220.00, max_segm_per_file = 20, equalize = True, colormap='viridis')
 
 
