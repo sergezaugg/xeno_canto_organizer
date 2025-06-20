@@ -43,11 +43,11 @@ xc = xco.XCO(start_path = 'C:/<path where data will be stored>')
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json', template = "mini")
 # Get information of what will be downloaded
-xc.get_summary(params_json = 'download_criteria.json')
+xc.download_summary(params_json = 'download_criteria.json')
 # Make summaries  
 print(xc.df_recs.shape)
 # Download the files 
-xc.download()
+xc.download_audio_files()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(conversion_fs = 24000)
 # Extract spectrograms from segments and store as PNG

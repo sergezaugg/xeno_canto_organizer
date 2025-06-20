@@ -31,7 +31,7 @@ class XCO():
             conf = yaml.safe_load(f)
         self.XC_API_URL = conf['XC_API_URL']
         self.start_path = start_path 
-        self.download_tag = 'downloaded_data'  
+        self.download_tag = 'downloaded_data' 
         self.df_recs = "not yet initializes"
 
     #----------------------------------
@@ -135,11 +135,10 @@ class XCO():
             json.dump(dl_params, f,  indent=4)
 
 
-    def get_summary(self, params_json):
+    def download_summary(self, params_json):
         """ 
         Description: Prepares a list of file to be downloaded, the list includes XC metadata
         Arguments:   params_json (str) : Path to a json file (templates json can be created by XCO.make_param())
-        Returns:     df_recs (data frame) : A dataframe listing the files to be downloaded
         """
         # load parameters from json file 
         with open(os.path.join(self.start_path, params_json)) as f:
@@ -171,13 +170,18 @@ class XCO():
         # make df and return
         self.df_recs = pd.DataFrame(recs_pool)
         self.df_recs['full_spec_name'] = self.df_recs['gen'] + ' ' +  self.df_recs['sp']
+        self.df_recs.to_pickle(os.path.join(self.start_path, 'summary_of_data.pkl') )
         # return(df_recs)
 
+    def reload_local_summary(self, ):
+        """ re-load summary as attribute if necessary"""
+        self.df_recs = pd.read_pickle(os.path.join(self.start_path, 'summary_of_data.pkl'))
 
-    def download(self):
+
+    def download_audio_files(self):
         """ 
         Description : Downloads mp3 files from XCO.XC_API_URL and stores them in XCO.start_path
-        Arguments : df_recs (data frame) : A dataframe returned by XCO.get_summary()
+        Arguments : df_recs (data frame) : A dataframe returned by XCO.download_summary()
         Returns: Files are written to XCO.start_path; nothing is returned into Python session
         """
         # Create directory to where files will be downloaded
