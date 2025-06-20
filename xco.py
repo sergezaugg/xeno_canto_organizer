@@ -20,11 +20,7 @@ import subprocess
 import yaml
 import datetime
 
-
 class XCO():
-
-    #----------------------------------
-    # (0) the init method
 
     def __init__(self, start_path):
         with open('./config.yaml') as f:
@@ -45,7 +41,6 @@ class XCO():
         x = int(x[0])*60 + int(x[1])
         return(x)
     
-
     def _clean_xc_filenames(self, s, max_string_size):
         """
         Description : keep only alphanumeric characters in a strin and remove '.mp3'
@@ -57,9 +52,6 @@ class XCO():
         stri = stri[0:max_string_size]
         return(stri)
     
-    # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
-
-
     def _read_piece_of_wav(self, f, start_sec, durat_sec): 
         """ 
         Description : Reads a piece of a wav file 
@@ -98,7 +90,6 @@ class XCO():
         # return 
         return(sig)
 
-
     #----------------------------------
     # (2) main methods 
 
@@ -133,7 +124,6 @@ class XCO():
     
         with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
-
 
     def download_summary(self, params_json):
         """ 
@@ -177,7 +167,6 @@ class XCO():
         """ re-load summary as attribute if necessary"""
         self.df_recs = pd.read_pickle(os.path.join(self.start_path, 'summary_of_data.pkl'))
 
-
     def download_audio_files(self):
         """ 
         Description : Downloads mp3 files from XCO.XC_API_URL and stores them in XCO.start_path
@@ -210,8 +199,6 @@ class XCO():
         df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
         df_all_extended.to_pickle(os.path.join(self.start_path, self.download_tag + '_meta.pkl') )
 
-    
-
     def mp3_to_wav(self, conversion_fs):
             """   
             Description : Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
@@ -240,8 +227,6 @@ class XCO():
                         ])
                 except:
                     print("An exception occurred during mp3-to-wav conversion with ffmpeg!")
-
-
 
     def extract_spectrograms(self, fs_tag, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  
                              equalize = True, max_segm_per_file = 100, colormap = 'gray', eps = 1e-10):
@@ -376,14 +361,13 @@ class XCO():
                 print("Error while reading wav file!")
 
             
-                
-
-
+            
 # devel code - supress execution if this is imported as module 
 if __name__ == "__main__":
     print("Hi V, you passed beyond the blackwall, you are in the dev space now!")
-
     plt.colormaps()
+    # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
+
     
 
 
