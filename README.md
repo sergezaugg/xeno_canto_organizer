@@ -1,24 +1,54 @@
-# Xeno-Canto organizer 
+# Xeno-Canto Organizer (XCO)
 
-**A python tool to prepare Xeno-Canto audio files for machine learning projects**
+**A python toolkit to prepare Xeno-Canto audio files for machine learning projects**
 
-### Summary
-* Xeno-Canto (XC) (https://www.xeno-canto.org) is a data treasure for ecology and bio-acoustics applications. 
-* However, the mp3 files cannot be directly used for machine learning (ML). 
-* This tool allows to download and prepare XC data for ML project.
-* It is a single class with a few methods for download, conversion, data segmentation and spectrograms extraction.
-* Thus, the complete download and preparation process can be handled in a small python script, see sample code below and **main.py**.
-* All intermediate and final items are written to files in a single directory tree.
-* :warning: Running the code can download many mp3 files :warning:
+## Summary
+[Xeno-Canto (XC)](https://www.xeno-canto.org/) is a data treasure for ecology and bio-acoustics applications. 
+However, the mp3 files cannot be directly used for machine learning (ML). 
+**Xeno-Canto Organizer** is a Python toolkit for downloading, organizing, and processing bio-acoustic audio recordings from xeno-canto. 
+It provides utilities for querying the xeno-canto API, filtering and summarizing metadata, downloading audio files, converting to wav formats, segmenting and generating spectrograms.
 
-### Features
-* Summaries can be checked before actual download
-* Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
-* Also stores the XC meta-data in PKL files that are easy to integrate with Python
-* Spectrogram parameters can be flexibly adjusted
-* Spectrogram stored as PNG images for easy exploration and ingestion by established CNNs
+## Features
+- Summarize and filter metadata prior to download.
+- Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
+- Download and organize audio files locally.
+- Convert MP3 files to WAV format (requires ffmpeg).
+- Generate spectrograms for further analysis.
+- Spectrogram parameters can be flexibly adjusted
+- Spectrogram stored as PNG images for easy exploration and ingestion by established CNNs
+- Also stores the XC meta-data in PKL files that are easy to integrate with Python
+- The complete download and preparation process can be handled in a small python script, see sample code below and **main.py**.
 
-### Usage
+## Installation
+
+1. **Clone the repository:**
+    ```bash
+    git clone https://github.com/yourusername/xeno-canto-organizer.git
+    cd xeno-canto-organizer
+    ```
+
+2. **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    # or 
+    pip install -r req_mini.txt
+    ```
+
+3. **Install [ffmpeg](https://ffmpeg.org/) for audio conversion (if not already installed).**
+
+## Project Structure
+
+```
+main.py                  # Demo script
+xco.py                   # Main XCO class and logic
+spec/                    # Example scripts for various datasets
+sample_json/             # Example parameter files
+images/                  # Example images/spectrograms
+requirements.txt         # Dependencies
+config.yaml              # Optional configuration
+```
+
+## Usage
 1. Download this repo as zip and initialize a new .git to track you personal changes in **main.py**.
 2. Make sure **ffmpg** and Python packages are installed (see Dependencies and installation)
 3. Open **main.py** and set the a **start_path**, see sample code below. 
@@ -67,18 +97,6 @@ xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, wi
 * It is handy because images can be easily visualized with standard software
 * Yes, 3-channel is an overkill but easier to be ingested by Image CNNs such as ResNet and co
 
-## Dependencies and installation
-* Needs internet access to download data from the XC API https://www.xeno-canto.org/api/2/recordings
-* Developed under Python 3.12.8
-* Install **ffmpg** (see for example https://ffmpeg.org)
-* Make a fresh venv and install the python packages with pip: 
-```bash
-pip install -r requirements.txt
-```
-
-## Hints
-* Check in **config.yaml** that the url to XC API is still valid
-
 ## Useful links
 * https://creativecommons.org/licenses/
 * https://xeno-canto.org/explore/api
@@ -87,12 +105,11 @@ pip install -r requirements.txt
 * Apparently, only 1 country and 1 species per request allowed by XC API
 * Only 1 request per second allowed by XC API
 
+## License
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-
-
-
-
-
+## Acknowledgements
+- [xeno-canto.org](https://www.xeno-canto.org/) for providing open-access bird sound data.
 
 
 
