@@ -11,9 +11,6 @@
 * All intermediate and final items are written to files in a single directory tree.
 * :warning: Running the code can download many mp3 files :warning:
 
-### Status
-* :construction: Still under development :construction:
-
 ### Features
 * Summaries can be checked before actual download
 * Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
