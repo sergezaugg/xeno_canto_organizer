@@ -20,18 +20,14 @@ import subprocess
 import yaml
 import datetime
 
-
 class XCO():
-
-    #----------------------------------
-    # (0) the init method
 
     def __init__(self, start_path):
         with open('./config.yaml') as f:
             conf = yaml.safe_load(f)
         self.XC_API_URL = conf['XC_API_URL']
         self.start_path = start_path 
-        self.download_tag = 'downloaded_data'  
+        self.download_tag = 'downloaded_data' 
         self.df_recs = "not yet initializes"
 
     #----------------------------------
@@ -45,7 +41,6 @@ class XCO():
         x = int(x[0])*60 + int(x[1])
         return(x)
     
-
     def _clean_xc_filenames(self, s, max_string_size):
         """
         Description : keep only alphanumeric characters in a strin and remove '.mp3'
@@ -57,9 +52,6 @@ class XCO():
         stri = stri[0:max_string_size]
         return(stri)
     
-    # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
-
-
     def _read_piece_of_wav(self, f, start_sec, durat_sec): 
         """ 
         Description : Reads a piece of a wav file 
@@ -98,7 +90,6 @@ class XCO():
         # return 
         return(sig)
 
-
     #----------------------------------
     # (2) main methods 
 
@@ -125,18 +116,19 @@ class XCO():
         elif template == "parus":
             with open(os.path.join('./sample_json/xc_downl_parus.json')) as f:
                 dl_params = json.load(f)      
+        elif template == "corvidae":
+            with open(os.path.join('./sample_json/xc_downl_corvidae.json')) as f:
+                dl_params = json.load(f)      
         else:
             return("Please provide a valid value for argument 'template'")
     
         with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
 
-
-    def get_summary(self, params_json):
+    def download_summary(self, params_json):
         """ 
         Description: Prepares a list of file to be downloaded, the list includes XC metadata
         Arguments:   params_json (str) : Path to a json file (templates json can be created by XCO.make_param())
-        Returns:     df_recs (data frame) : A dataframe listing the files to be downloaded
         """
         # load parameters from json file 
         with open(os.path.join(self.start_path, params_json)) as f:
@@ -168,13 +160,17 @@ class XCO():
         # make df and return
         self.df_recs = pd.DataFrame(recs_pool)
         self.df_recs['full_spec_name'] = self.df_recs['gen'] + ' ' +  self.df_recs['sp']
+        self.df_recs.to_pickle(os.path.join(self.start_path, 'summary_of_data.pkl') )
         # return(df_recs)
 
+    def reload_local_summary(self, ):
+        """ re-load summary as attribute if necessary"""
+        self.df_recs = pd.read_pickle(os.path.join(self.start_path, 'summary_of_data.pkl'))
 
-    def download(self):
+    def download_audio_files(self):
         """ 
         Description : Downloads mp3 files from XCO.XC_API_URL and stores them in XCO.start_path
-        Arguments : df_recs (data frame) : A dataframe returned by XCO.get_summary()
+        Arguments : df_recs (data frame) : A dataframe returned by XCO.download_summary()
         Returns: Files are written to XCO.start_path; nothing is returned into Python session
         """
         # Create directory to where files will be downloaded
@@ -202,8 +198,6 @@ class XCO():
         df_all_extended['file_name_stub'] = new_filename 
         df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
         df_all_extended.to_pickle(os.path.join(self.start_path, self.download_tag + '_meta.pkl') )
-
-    
 
     def mp3_to_wav(self, conversion_fs):
             """   
@@ -233,8 +227,6 @@ class XCO():
                         ])
                 except:
                     print("An exception occurred during mp3-to-wav conversion with ffmpeg!")
-
-
 
     def extract_spectrograms(self, fs_tag, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  
                              equalize = True, max_segm_per_file = 100, colormap = 'gray', eps = 1e-10):
@@ -369,14 +361,13 @@ class XCO():
                 print("Error while reading wav file!")
 
             
-                
-
-
+            
 # devel code - supress execution if this is imported as module 
 if __name__ == "__main__":
     print("Hi V, you passed beyond the blackwall, you are in the dev space now!")
-
     plt.colormaps()
+    # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
+
     
 
 

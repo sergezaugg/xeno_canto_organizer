@@ -1,0 +1,45 @@
+{
+    "min_duration_s": 5,
+    "max_duration_s": 15,
+    "quality": [
+        "A",
+        "B",
+        "C"
+    ],
+    "exclude_nd": true,
+    "country": [
+        "Switzerland",
+        "Austria",
+        "Czech Republic",
+        "Slovenia",
+        "Belgium",
+        "France",
+        "Germany",
+        "Italy",
+        "Portugal",
+        "Spain",
+        "Netherlands",
+        "Sweden",
+        "Denmark",
+        "Finland",
+        "Norway",
+        "Latvia",
+        "Lithuania",
+        "Estonia",
+        "Poland"
+    ],
+    "species": [
+        "Corvus corax",
+        "Corvus cornix",
+        "Corvus corone",
+        "Corvus frugilegus",
+        "Pyrrhocorax graculus",
+        "Pyrrhocorax pyrrhocorax",
+        "Coloeus monedula",
+        "Coloeus dauuricus",
+        "Garrulus glandarius",
+        "Pica pica",
+        "Cyanopica cooki",
+        "Nucifraga caryocatactes"
+    ]
+}
