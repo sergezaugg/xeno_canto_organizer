@@ -1,59 +1,58 @@
 # Xeno-Canto Organizer (XCO)
 
 ## Summary
-[Xeno-Canto (XC)](https://www.xeno-canto.org/) is a data treasure for ecology and bio-acoustics applications. 
-However, the mp3 files cannot be directly used for machine learning (ML). 
-**Xeno-Canto Organizer** is a Python toolkit to prepare Xeno-Canto bio-acoustic audio files **specifically for machine learning projects**
+- The data repository of the [Xeno-Canto](https://www.xeno-canto.org/) project is a treasure for ecology and bio-acoustics applications. 
+- However, the provide mp3 files cannot be directly used for machine learning (ML). 
+- **Xeno-Canto Organizer** is a Python toolkit to prepare Xeno-Canto bio-acoustic audio files **specifically for machine learning projects**
 
 ## Features
 - Explicit selection of mp3 duration, quality, country, species gives fine control of what is included
 - Summarize and filter files based on metadata prior to download.
 - Convert MP3 files to WAV format and convert sampling rate (requires ffmpeg).
 - Segment into pieces with custom duration and overlap
-- Generate spectrograms that are stored as PNG images for easy exploration and ingestion by established CNNs
+- Generate spectrograms and stored as PNG images for easy exploration and ingestion by established CNNs
 - Spectrogram parameters can be flexibly adjusted
-- Stores the XC meta-data in PKL files that are easy to integrate with Python
-- The complete download and preparation process can be handled (and replicated) with a small python script
+- Also stores the XC meta-data in PKL files that are easy to integrate with Python
+- The complete download and preparation process can be handled and replicated with a small python script (example provided)
+- Github repo of two ML project based on XCO are [IDNN](https://github.com/sergezaugg/feature_extraction_idnn) and [SAEC](https://github.com/sergezaugg/feature_extraction_saec)
 
 ## Installation
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/xeno-canto-organizer.git
-    cd xeno-canto-organizer
-    ```
+1. **Clone (or download) the repository:**
 
-2. **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    # or 
-    pip install -r req_mini.txt
-    ```
+    ```git clone https://github.com/yourusername/xeno-canto-organizer.git```
 
-3. **Install [ffmpeg](https://ffmpeg.org/) for audio conversion (if not already installed).**
+2. **Navigate to repository root:**
+
+    ```cd xeno-canto-organizer```
+
+3. **Install dependencies:**
+
+    ```pip install -r requirements.txt```
+
+4. **Install **ffmpeg** for audio conversion (if not already installed).**
 
 ## Project Structure
 
 ```
-main.py                  # Demo script
+# primary
 xco.py                   # Main XCO class and functionality
-spec/                    # Example scripts for various datasets
-sample_json/             # Example parameter files
+sample_code/             # Demo scripts
+sample_json/             # Example json files with download parameters
 requirements.txt         # Dependencies
-config.yaml              # Optional configuration
+
+# devel
+config.yaml              # Optional configuration of url to xc api
+spec/                    # Used for dev only 
+images/                  # Images for the readme
 ```
 
-## Usage
-1. Open **main.py** and set the a **start_path**, see sample code below. 
-2. Make a template JSON to define the download, see sample code. 
-3. Edit the JSON according to your needs (species, countries, recording duration and quality)
-4. Run **main.py** line-by-line, check the files that are generated, adjust the parameters of your data preparation. 
-5. Once **main.py** is ready, run all.
-6. Result: metadata, mp3, wav, and spectrograms should be ready in their respective directories.
-7. :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
+## Usage 
 
-### Sample code
-Example of how preparation of data for an ML project can be handled with super-short Python script
+- Example of how preparation of data for an ML project can be handled:
+- A complete and commented example is given in [this script](sample_code\example_long.py)
+- A minimal example is shown below and also given in [this script](sample_code\example_short.py)
+
 ```python
 #----------------------
 # minimalistic example
@@ -66,18 +65,27 @@ if not os.path.isdir('./temp_xc_project'):
 xc = xco.XCO(start_path = './temp_xc_project')
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json', template = "mini")
-# Get information of what will be downloaded
+# Get summary table of what will be downloaded into xc.df_recs
 xc.download_summary(params_json = 'download_criteria.json')
-# Make summaries  
-print(xc.df_recs.shape)
 # Download the files 
 xc.download_audio_files()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(conversion_fs = 24000)
 # Extract spectrograms from segments and store as PNG
-xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis')
+xc.extract_spectrograms(
+    fs_tag = 24000, 
+    segm_duration = 1.0, 
+    segm_step = 0.5, 
+    win_siz = 512, 
+    win_olap = 192, 
+    max_segm_per_file = 12, 
+    equalize = True, 
+    colormap='viridis', 
+    )
 
 ```
+
+:satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
 
 ## Illustration
 * The figure below is a snapshot of a few spectrograms obtained with this tool
