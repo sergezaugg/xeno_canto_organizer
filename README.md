@@ -42,7 +42,6 @@ sample_json/             # Example json files with download parameters
 requirements.txt         # Dependencies
 
 # devel
-config.yaml              # Optional configuration of url to xc api
 spec/                    # Used for dev only 
 images/                  # Images for the readme
 ```

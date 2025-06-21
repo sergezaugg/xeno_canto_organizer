@@ -22,6 +22,5 @@ license-files = ["LICEN[CS]E*"]
 Homepage = "https://github.com/sergezaugg/xeno_canto_organizer"
 Issues = "https://github.com/sergezaugg/xeno_canto_organizer/issues"
 
-
 [tool.setuptools.package-data]
 "xeno_canto_organizer.sample_json" = ["*.json"]

@@ -8,8 +8,9 @@
 # pip install dist/xeno_canto_organizer-0.9.8-py3-none-any.whl
 
 import os
-# import xco 
-
+# dev
+import src.xeno_canto_organizer.xco as xco
+# usage
 import xeno_canto_organizer.xco as xco
 
 
@@ -20,6 +21,8 @@ if not os.path.isdir('./temp_xc_project'):
 xc = xco.XCO(start_path = './temp_xc_project')
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json', template = "mini")
+xc.make_param(filename = 'download_criteria.json', template = "sw_europe_small")
+
 # Get summary table of what will be downloaded into xc.df_recs
 xc.download_summary(params_json = 'download_criteria.json')
 # Download the files 
@@ -37,6 +40,8 @@ xc.extract_spectrograms(
     equalize = True, 
     colormap='viridis', 
     )
+
+
 
 
 
