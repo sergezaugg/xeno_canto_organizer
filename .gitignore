@@ -4,3 +4,21 @@
 /__pycache__/tests.cpython-312.pyc
 __pycache__
 temp_xc_project
+
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg

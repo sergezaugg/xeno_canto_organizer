@@ -13,8 +13,6 @@ if not os.path.isdir('./temp_xc_project'):
     os.makedirs('./temp_xc_project')
 # Make an instance of the XCO class and define the start path 
 xc = xco.XCO(start_path = './temp_xc_project')
-# Check where data will be retrieved
-xc.XC_API_URL
 # Check where data will be written 
 xc.start_path
 # Create a template json parameter file (to be edited)

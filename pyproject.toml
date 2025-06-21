@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xeno_canto_organizer" 
+version = "v0.9.8"
+authors = [
+  { name="Serge Zaugg", email="author@example.com" },
+]
+description = "a Python toolkit to prepare Xeno-Canto bio-acoustic audio files for machine learning projects"
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/sergezaugg/xeno_canto_organizer"
+Issues = "https://github.com/sergezaugg/xeno_canto_organizer/issues"
+
+
+[tool.setuptools.package-data]
+"xeno_canto_organizer.sample_json" = ["*.json"]
