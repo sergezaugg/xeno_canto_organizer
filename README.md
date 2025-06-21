@@ -26,8 +26,6 @@ However, the mp3 files cannot be directly used for machine learning (ML).
 2. **Install dependencies:**
     ```bash
     pip install -r requirements.txt
-    # or 
-    pip install -r req_mini.txt
     ```
 
 3. **Install [ffmpeg](https://ffmpeg.org/) for audio conversion (if not already installed).**
@@ -53,7 +51,10 @@ config.yaml              # Optional configuration
 7. :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
 
 ### Sample code
-Example of how preparation of data for an ML project can be handled with super-short Python script
+- Example of how preparation of data for an ML project can be handled:
+- A complete and commented example is given in [this script](sample_code\example_long.py)
+- A minimal example is shown below and also given in [this script](sample_code\example_short.py)
+
 ```python
 #----------------------
 # minimalistic example
@@ -66,16 +67,23 @@ if not os.path.isdir('./temp_xc_project'):
 xc = xco.XCO(start_path = './temp_xc_project')
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json', template = "mini")
-# Get information of what will be downloaded
+# Get summary table of what will be downloaded into xc.df_recs
 xc.download_summary(params_json = 'download_criteria.json')
-# Make summaries  
-print(xc.df_recs.shape)
 # Download the files 
 xc.download_audio_files()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(conversion_fs = 24000)
 # Extract spectrograms from segments and store as PNG
-xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis')
+xc.extract_spectrograms(
+    fs_tag = 24000, 
+    segm_duration = 1.0, 
+    segm_step = 0.5, 
+    win_siz = 512, 
+    win_olap = 192, 
+    max_segm_per_file = 12, 
+    equalize = True, 
+    colormap='viridis', 
+    )
 
 ```
 
