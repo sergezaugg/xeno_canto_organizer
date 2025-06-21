@@ -4,15 +4,16 @@
 # For real projects we recommend using a dir outside if this repo
 # --------------
 
+# python -m pip install --upgrade build
+# python -m build
 # pip uninstall xeno_canto_organizer 
-# pip install dist/xeno_canto_organizer-0.9.8-py3-none-any.whl
+# pip install dist/xeno_canto_organizer-0.9.9-py3-none-any.whl
 
 import os
 # dev
 import src.xeno_canto_organizer.xco as xco
 # usage
 import xeno_canto_organizer.xco as xco
-
 
 # make a projects dir, if it does not already exist
 if not os.path.isdir('./temp_xc_project'):

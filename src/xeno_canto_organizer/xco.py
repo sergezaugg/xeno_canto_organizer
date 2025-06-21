@@ -100,15 +100,13 @@ class XCO():
         Returns: Writes a json file to disc
         """
         from importlib.resources import files
-        # hack 
+        # hack to be able to run this function in dev mode (interactive) and also when called from within a package
         import __main__
-        if hasattr(__main__, '__file__'):
-            # Running as a script or module (package)
+        if hasattr(__main__, '__file__'): # Running as a script or module (package)
             path_json = "xeno_canto_organizer.sample_json"
-        else:
-            # Running in an interactive session
+        else: # Running in an interactive session
             path_json = "src.xeno_canto_organizer.sample_json"
-
+        # mian functionality 
         if template == "mini":
             with files(path_json).joinpath("xc_downl_mini.json").open("r") as f:
                 dl_params = json.load(f)   

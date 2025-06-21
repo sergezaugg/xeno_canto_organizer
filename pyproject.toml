@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xeno_canto_organizer" 
-version = "v0.9.8"
+version = "v0.9.9"
 authors = [
   { name="Serge Zaugg", email="author@example.com" },
 ]

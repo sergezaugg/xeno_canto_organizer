@@ -7,7 +7,14 @@
 #---------------------------------------
 import os
 import pandas as pd
-import xco 
+
+
+# dev
+import src.xeno_canto_organizer.xco as xco
+# usage
+import xeno_canto_organizer.xco as xco
+
+
 # make a projects dir, if it does not already exist
 if not os.path.isdir('./temp_xc_project'):
     os.makedirs('./temp_xc_project')
