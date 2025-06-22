@@ -16,12 +16,15 @@
 - The complete download and preparation process can be handled and replicated with a small python script (example provided)
 - Github repo of two ML project based on XCO are [IDNN](https://github.com/sergezaugg/feature_extraction_idnn) and [SAEC](https://github.com/sergezaugg/feature_extraction_saec)
 
+## Installation of external dependency (FFmpeg)
+- This package requires [FFmpeg](https://ffmpeg.org/) installed for mp3 to wav conversion and resampling
+- Please follow to official instruction of FFmpeg for installation
+
 ## Installation (for project usage)
 - Download the latest package wheel from https://github.com/sergezaugg/xeno_canto_organizer/releases
 - Make a fresh venv: ``` python -m venv ./ ```
 - Navigate to the download folder
 - Install the downloaded package: e.g. ```pip install xeno_canto_organizer-0.9.12-py3-none-any.whl```
-- Install **ffmpeg** (if not already installed)
 
 ## Installation (devel)
 - Clone repository:
@@ -30,7 +33,7 @@
     ```cd xeno-canto-organizer```
 - Install dependencies:
     ```pip install -r requirements.txt```
-- Install **ffmpeg** (if not already installed)
+
 
 ## Usage 
 - Example of how preparation of data for an ML project can be handled:
@@ -64,9 +67,9 @@ xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5,
 ## Illustration
 * The figures below are snapshot of a few spectrograms obtained with this tool 
 
-<img src="images/spectros_01.png" width="400" />
-<img src="images/spectros_02.png" width="400" />
-<img src="images/spectros_03.png" width="400" />
+<img src="images/spectros_001.png" width="400" />
+<img src="images/spectros_002.png" width="400" />
+<img src="images/spectros_003.png" width="400" />
 <figcaption>(equalized 3-ch color, equalized 1-ch gray, non-equalized 3-ch color)</figcaption>
 
 
@@ -99,7 +102,8 @@ requirements.txt         # To install dependencies for devel
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Acknowledgements
-- [xeno-canto.org](https://www.xeno-canto.org/) for providing open-access bird sound data.
+- The team and recordist of [xeno-canto.org](https://www.xeno-canto.org/) for providing open-access bird sound data.
+- The team developing [FFmpeg](https://ffmpeg.org/) which is a fantastic tool for acoustic processing.  
 
 ## Author
 - Created by [Serge Zaugg](https://www.linkedin.com/in/dkifh34rtn345eb5fhrthdbgf45/).

@@ -165,7 +165,6 @@ class XCO():
         self.df_recs = pd.DataFrame(recs_pool)
         self.df_recs['full_spec_name'] = self.df_recs['gen'] + ' ' +  self.df_recs['sp']
         self.df_recs.to_pickle(os.path.join(self.start_path, 'summary_of_data.pkl') )
-        # return(df_recs)
 
     def reload_local_summary(self, ):
         """ re-load summary as attribute if necessary"""
@@ -191,9 +190,7 @@ class XCO():
             rq = requests.get(full_download_string, allow_redirects=True)
             # simplify and clean filename
             finam2 = self._clean_xc_filenames(s = re_i["file-name"], max_string_size = 30)
-            # add genus and species into filename
-            # finam2 = re_i['gen'] + "_" + re_i['sp'] + '_' + finam2
-             # write file to disc
+            # write file to disc
             open(os.path.join(source_path, finam2 + '.mp3') , 'wb').write(rq.content)
             new_filename.append(finam2)
             # row_i['finam2'] = finam2
@@ -267,9 +264,6 @@ class XCO():
         
         thedir = thedir[0] # why ?
         path_source = os.path.join(self.start_path,  thedir)
-        # old 
-        # path_destin = os.path.join(self.start_path,  thedir.replace('_wav_','_img_'))
-        # new 
         tstmp = datetime.datetime.now().strftime("_%Y%m%d_%H%M%S")
         path_destin = os.path.join(self.start_path,  'images_' + str(fs_tag) + 'sps' + tstmp)
 
@@ -355,7 +349,6 @@ class XCO():
                             im = Image.fromarray((colored_image[:, :, :3] * 255).astype(np.uint8))
                         # print("PIL image size: ", im.size, im.mode)
                         # save as image 
-                        # image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(ii) + ".png")
                         startSec_str = "{:005.3f}".format(startSec).zfill(8) # make a fixed length string for start second
                         image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(startSec_str) + ".png")
                         im.save(image_save_path)
@@ -368,7 +361,6 @@ class XCO():
             
 # devel code - supress execution if this is imported as module 
 if __name__ == "__main__":
-    print("Hi V, you passed beyond the blackwall, you are in the dev space now!")
     plt.colormaps()
     # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
 
