@@ -4,6 +4,9 @@
 # For real projects we recommend using a dir outside if this repo
 # --------------
 
+# install xco package from github
+# pip install https://github.com/sergezaugg/xeno_canto_organizer/releases/download/v0.9.15/xeno_canto_organizer-0.9.15-py3-none-any.whl
+
 import os
 import xeno_canto_organizer.xco as xco
 

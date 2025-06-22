@@ -4,6 +4,9 @@
 # For real projects please use a dir outside if this repo
 # --------------
 
+# install xco package from github
+# pip install https://github.com/sergezaugg/xeno_canto_organizer/releases/download/v0.9.15/xeno_canto_organizer-0.9.15-py3-none-any.whl
+
 #---------------------------------------
 import os
 import pandas as pd
@@ -46,6 +49,8 @@ df_meta.head()
 # Open a new session
 # The pre-downloaded mp3 files can be reprocessed with different parameters 
 # Point XCO to the dir with pre-downloaded mp33
+import xeno_canto_organizer.xco as xco
+
 xc = xco.XCO(start_path = './temp_xc_project')
 
 # Make wavs with fs = 20000 and then short spectrogram 
