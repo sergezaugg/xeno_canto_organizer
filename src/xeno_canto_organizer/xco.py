@@ -20,7 +20,6 @@ import subprocess
 import datetime
 from importlib.resources import files
 
-
 class XCO():
 
     def __init__(self, start_path, XC_API_URL = 'https://www.xeno-canto.org/api/2/recordings'):
@@ -130,7 +129,7 @@ class XCO():
             json.dump(dl_params, f,  indent=4)
         return(dl_params)    
 
-    def download_summary(self, download_params):
+    def download_summary(self, download_params, verbose = False):
         """ 
         Description: Prepares a list of file to be downloaded, the list includes XC metadata
         Arguments: download_params (str) : Path to a json file (templates json can be created by XCO.make_param())
@@ -151,7 +150,8 @@ class XCO():
                 search_str = ke.replace(' ', '+') 
                 # API HTTP request of meta data 
                 full_query_string = self.XC_API_URL + '?query=' + search_str + cnt_str
-                print(full_query_string)
+                if verbose:
+                    print(full_query_string)
                 r = requests.get(full_query_string, allow_redirects=True)
                 j = r.json()
                 recs = j['recordings']
@@ -171,12 +171,13 @@ class XCO():
         self.df_recs = pd.DataFrame(recs_pool)
         self.df_recs['full_spec_name'] = self.df_recs['gen'] + ' ' +  self.df_recs['sp']
         self.df_recs.to_pickle(os.path.join(self.start_path, 'summary_of_data.pkl') )
+        print("Done! fetched info for " + str(self.df_recs.shape[0]) + " files") 
 
     def reload_local_summary(self, ):
         """ re-load summary as attribute if necessary"""
         self.df_recs = pd.read_pickle(os.path.join(self.start_path, 'summary_of_data.pkl'))
 
-    def download_audio_files(self):
+    def download_audio_files(self, verbose = False):
         """ 
         Description : Downloads mp3 files from XCO.XC_API_URL and stores them in XCO.start_path
         Arguments : df_recs (data frame) : A dataframe returned by XCO.download_summary()
@@ -190,7 +191,8 @@ class XCO():
         new_filename = []
         for i,row_i in self.df_recs.iterrows():
             re_i = row_i.to_dict()
-            print("Downloading file: ", re_i["file-name"])
+            if verbose:
+                print("Downloading file: ", re_i["file-name"])
             full_download_string = re_i["file"]
             # actually download files 
             rq = requests.get(full_download_string, allow_redirects=True)
@@ -205,8 +207,9 @@ class XCO():
         df_all_extended['file_name_stub'] = new_filename 
         df_all_extended['full_spec_name'] = df_all_extended['gen'] + ' ' +  df_all_extended['sp']
         df_all_extended.to_pickle(os.path.join(self.start_path, self.download_tag + '_meta.pkl') )
+        print("Done! downloaded " + str(i+1) + " files") 
 
-    def mp3_to_wav(self, conversion_fs):
+    def mp3_to_wav(self, conversion_fs, verbose = False):
             """   
             Description : Looks for files ending in .mp3 and attempt to convert them to wav with ffmpeg
             Arguments :   conversion_fs : the sampling rate of the saved wav file  
@@ -220,8 +223,9 @@ class XCO():
                 os.mkdir(path_destin)
             all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
             # loop over mp3 file and convert to wav by call to ffmpeg
-            for finam in all_mp3s:
-                print("Converting to wav: " + finam)
+            for ii, finam in enumerate(all_mp3s):
+                if verbose:
+                    print("Converting to wav: " + finam)
                 patin = os.path.join(path_source, finam)
                 paout = os.path.join(path_destin, finam.replace('.mp3','.wav' ))
                 try:
@@ -234,9 +238,10 @@ class XCO():
                         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 except:
                     print("An exception occurred during mp3-to-wav conversion with ffmpeg!")
+            print("Done! converted " + str(ii+1) + " files") 
 
     def extract_spectrograms(self, fs_tag, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  
-                             equalize = True, max_segm_per_file = 100, colormap = 'gray', eps = 1e-10):
+                             equalize = True, max_segm_per_file = 100, colormap = 'gray', eps = 1e-10, verbose = False):
         """
         Description : Process wav file by segments, for each segment makes a spectrogram, and saves a PNG
         Arguments : 
@@ -266,7 +271,7 @@ class XCO():
             print("WARNING - fs_tag is not equal to any of the dirs created with xco.mp3_to_wav()")
             return(None)
         else:
-            print("Proceeding ...")
+            4+4
         
         thedir = thedir[0] # why ?
         path_source = os.path.join(self.start_path,  thedir)
@@ -300,6 +305,7 @@ class XCO():
             json.dump(params_dict, f, indent=4)    
 
         # loop over wav files 
+        tot_counter = 0
         for wavFileName in allWavFileNames: 
             try:
                 # open wav file and get meta-information 
@@ -313,7 +319,8 @@ class XCO():
                 if myFs != fs_tag:
                     print("Wav file ignored because its sampling frequency is not equal to fs_tag !  " + wavFileName)
                     continue
-                print("Extracting spectrograms: " + wavFileName)
+                if verbose:
+                    print("Extracting spectrograms: " + wavFileName)
                 
                 # loop over segments within file   
                 totNbSegments = int(totDurFile_s / segm_duration)  
@@ -358,17 +365,20 @@ class XCO():
                         startSec_str = "{:005.3f}".format(startSec).zfill(8) # make a fixed length string for start second
                         image_save_path = os.path.join(path_destin, os.path.basename(wavFileName).replace('.wav','_segm_') + str(startSec_str) + ".png")
                         im.save(image_save_path)
+                        tot_counter += 1
                     except:
                         print("Error during loop over segments of wav file!")
             except:
                 print("Error while reading wav file!")
-
-            
-            
+        print("Done! extracted " + str(tot_counter) + " spectograms") 
+         
 # devel code - supress execution if this is imported as module 
 if __name__ == "__main__":
+
     plt.colormaps()
-    # _clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3")
+
+    xc = XCO(start_path = "aaa") 
+    xc._clean_xc_filenames(s = "öüä%&/sdf__caca_.55&/())äöüöä5.mp3", max_string_size = 20)
 
     
 
