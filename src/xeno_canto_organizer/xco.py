@@ -215,7 +215,7 @@ class XCO():
             all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
             # loop over mp3 file and convert to wav by call to ffmpeg
             for finam in all_mp3s:
-                # print(finam)
+                print("Converting to wav: " + finam)
                 patin = os.path.join(path_source, finam)
                 paout = os.path.join(path_destin, finam.replace('.mp3','.wav' ))
                 try:
@@ -225,7 +225,7 @@ class XCO():
                         '-ar', str(conversion_fs), # -ar rate set audio sampling rate (in Hz)
                         '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
                         paout
-                        ])
+                        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 except:
                     print("An exception occurred during mp3-to-wav conversion with ffmpeg!")
 
@@ -307,7 +307,7 @@ class XCO():
                 if myFs != fs_tag:
                     print("Wav file ignored because its sampling frequency is not equal to fs_tag !  " + wavFileName)
                     continue
-                print("Processing file: " + wavFileName)
+                print("Extracting spectrograms: " + wavFileName)
                 
                 # loop over segments within file   
                 totNbSegments = int(totDurFile_s / segm_duration)  
