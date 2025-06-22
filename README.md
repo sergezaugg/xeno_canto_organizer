@@ -16,42 +16,23 @@
 - The complete download and preparation process can be handled and replicated with a small python script (example provided)
 - Github repo of two ML project based on XCO are [IDNN](https://github.com/sergezaugg/feature_extraction_idnn) and [SAEC](https://github.com/sergezaugg/feature_extraction_saec)
 
-
-## Installation (usage)
-
-- TBW soon
+## Installation (for project usage)
+- Download the latest package wheel from https://github.com/sergezaugg/xeno_canto_organizer/releases
+- Make a fresh venv: ``` python -m venv ./ ```
+- Navigate to the download folder
+- Install the downloaded package: e.g. ```pip install xeno_canto_organizer-0.9.12-py3-none-any.whl```
+- Install **ffmpeg** (if not already installed)
 
 ## Installation (devel)
-
-1. **Clone (or download) the repository:**
-
+- Clone repository:
     ```git clone https://github.com/yourusername/xeno-canto-organizer.git```
-
-2. **Navigate to repository root:**
-
+- Navigate to repository root:
     ```cd xeno-canto-organizer```
-
-3. **Install dependencies:**
-
+- Install dependencies:
     ```pip install -r requirements.txt```
-
-4. **Install **ffmpeg** for audio conversion (if not already installed).**
-
-## Project Structure
-
-```
-# primary
-images/                  # Images for the readme
-dev_scripts/             # Misc code used fo development
-sample_code/             # Demo scripts
-src/                     # Main XCO class and functionality
-tests/                   # For code testing ()
-pyproject.toml           # Setup info for building  package  
-requirements.txt         # To install Dependencies for devel
-```
+- Install **ffmpeg** (if not already installed)
 
 ## Usage 
-
 - Example of how preparation of data for an ML project can be handled:
 - A complete and commented example is given in [this script](sample_code\example_long.py)
 - A minimal example is shown below and also given in [this script](sample_code\example_short.py)
@@ -75,41 +56,43 @@ xc.download_audio_files()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(conversion_fs = 24000)
 # Extract spectrograms from segments and store as PNG
-xc.extract_spectrograms(
-    fs_tag = 24000, 
-    segm_duration = 1.0, 
-    segm_step = 0.5, 
-    win_siz = 512, 
-    win_olap = 192, 
-    max_segm_per_file = 12, 
-    equalize = True, 
-    colormap='viridis', 
-    )
-
+xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, 
+    win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis', )
 ```
-
 :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
 
 ## Illustration
-* The figure below is a snapshot of a few spectrograms obtained with this tool
-* MP3 were converted to wav files with a fixed sampling frequency
-* Wav files were cut into pieces and spectrograms extracted 
-* Spectrograms were equalized, log10-transformed and mapped to [0, 255]
-* Can be exported as 1-channel or 3-channel images
+* The figures below are snapshot of a few spectrograms obtained with this tool 
 
-![](./images/spectros_01.png)  
+<img src="images/spectros_01.png" width="400" />
+<img src="images/spectros_02.png" width="400" />
+<img src="images/spectros_03.png" width="400" />
+<figcaption>(equalized 3-ch color, equalized 1-ch gray, non-equalized 3-ch color)</figcaption>
+
 
 ## Why save spectrogram of sounds as PNG images
 * It is handy because many PyTorch models and data augmentation procedures can directly ingest PNGs
 * It is handy because images can be easily visualized with standard software
 * Yes, 3-channel is an overkill but easier to be ingested by Image CNNs such as ResNet and co
 
+
+## Project Structure
+```
+images/                  # Images for the readme
+dev_scripts/             # Misc code used fo development
+sample_code/             # Demo scripts
+src/                     # Main XCO class and functionality
+tests/                   # For code testing
+pyproject.toml           # Setup info for building package  
+requirements.txt         # To install dependencies for devel
+```
+
 ## Useful links
 * https://creativecommons.org/licenses/
 * https://xeno-canto.org/explore/api
 
 ## Limitation
-* Apparently, only 1 country and 1 species per request allowed by XC API
+* Only 1 country and 1 species per request allowed by XC API
 * Only 1 request per second allowed by XC API
 
 ## License
