@@ -53,7 +53,7 @@ xc = xco.XCO(start_path = './temp_xc_project')
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json', template = "mini")
 # Get summary table of what will be downloaded into xc.df_recs
-xc.download_summary(params_json = 'download_criteria.json')
+xc.download_summary(download_params = 'download_criteria.json')
 # Download the files 
 xc.download_audio_files()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)

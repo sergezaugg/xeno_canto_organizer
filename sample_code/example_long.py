@@ -19,7 +19,7 @@ xc.start_path
 # Create a template json parameter file (to be edited)
 xc.make_param(filename = 'download_criteria.json', template = "mini")
 # Get summary table of what will be downloaded into xc.df_recs
-xc.download_summary(params_json = 'download_criteria.json')
+xc.download_summary(download_params = 'download_criteria.json')
 # (if session was closed) reload summary from local pkl file into xc.df_recs
 xc.reload_local_summary()
 # (optional) Make summaries of what will be downloaded

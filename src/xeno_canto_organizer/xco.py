@@ -128,15 +128,21 @@ class XCO():
         
         with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
+        return(dl_params)    
 
-    def download_summary(self, params_json):
+    def download_summary(self, download_params):
         """ 
         Description: Prepares a list of file to be downloaded, the list includes XC metadata
-        Arguments:   params_json (str) : Path to a json file (templates json can be created by XCO.make_param())
+        Arguments: download_params (str) : Path to a json file (templates json can be created by XCO.make_param())
         """
         # load parameters from json file 
-        with open(os.path.join(self.start_path, params_json)) as f:
-            dl_params = json.load(f)
+        if isinstance(download_params, (str)):
+            with open(os.path.join(self.start_path, download_params)) as f:
+                dl_params = json.load(f)
+        elif isinstance(download_params, dict):
+            dl_params = download_params    
+        else:
+            raise TypeError("Input must be a file path (str) or a dict")
         # retrieve meta data from XC web and select candidate files to be downloaded
         recs_pool = []
         for cnt in dl_params['country']:
@@ -215,7 +221,7 @@ class XCO():
             all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
             # loop over mp3 file and convert to wav by call to ffmpeg
             for finam in all_mp3s:
-                # print(finam)
+                print("Converting to wav: " + finam)
                 patin = os.path.join(path_source, finam)
                 paout = os.path.join(path_destin, finam.replace('.mp3','.wav' ))
                 try:
@@ -225,7 +231,7 @@ class XCO():
                         '-ar', str(conversion_fs), # -ar rate set audio sampling rate (in Hz)
                         '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
                         paout
-                        ])
+                        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 except:
                     print("An exception occurred during mp3-to-wav conversion with ffmpeg!")
 
@@ -307,7 +313,7 @@ class XCO():
                 if myFs != fs_tag:
                     print("Wav file ignored because its sampling frequency is not equal to fs_tag !  " + wavFileName)
                     continue
-                print("Processing file: " + wavFileName)
+                print("Extracting spectrograms: " + wavFileName)
                 
                 # loop over segments within file   
                 totNbSegments = int(totDurFile_s / segm_duration)  
