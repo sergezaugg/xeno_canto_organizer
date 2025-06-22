@@ -128,15 +128,21 @@ class XCO():
         
         with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
+        return(dl_params)    
 
-    def download_summary(self, params_json):
+    def download_summary(self, download_params):
         """ 
         Description: Prepares a list of file to be downloaded, the list includes XC metadata
-        Arguments:   params_json (str) : Path to a json file (templates json can be created by XCO.make_param())
+        Arguments: download_params (str) : Path to a json file (templates json can be created by XCO.make_param())
         """
         # load parameters from json file 
-        with open(os.path.join(self.start_path, params_json)) as f:
-            dl_params = json.load(f)
+        if isinstance(download_params, (str)):
+            with open(os.path.join(self.start_path, download_params)) as f:
+                dl_params = json.load(f)
+        elif isinstance(download_params, dict):
+            dl_params = download_params    
+        else:
+            raise TypeError("Input must be a file path (str) or a dict")
         # retrieve meta data from XC web and select candidate files to be downloaded
         recs_pool = []
         for cnt in dl_params['country']:
