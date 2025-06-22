@@ -62,11 +62,12 @@ xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5,
 :satisfied: :smirk: Now you can throw your PyTorch magics at those PNGs (not covered in this codebase :wink:) 
 
 ## Illustration
-* The figures below are snapshot of a few spectrograms obtained with this tool
+* The figures below are snapshot of a few spectrograms obtained with this tool 
 
-<img src="images/spectros_01.png" alt="Example image" width="400"/>
-<img src="images/spectros_02.png" alt="Example image" width="400"/>
-<img src="images/spectros_03.png" alt="Example image" width="400"/>
+<img src="images/spectros_01.png" width="400" />
+<img src="images/spectros_02.png" width="400" />
+<img src="images/spectros_03.png" width="400" />
+<figcaption>(equalized 3-ch color, equalized 1-ch gray, non-equalized 3-ch color)</figcaption>
 
 
 ## Why save spectrogram of sounds as PNG images
@@ -75,31 +76,23 @@ xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5,
 * Yes, 3-channel is an overkill but easier to be ingested by Image CNNs such as ResNet and co
 
 
-
-
-
 ## Project Structure
-
 ```
-# primary
 images/                  # Images for the readme
 dev_scripts/             # Misc code used fo development
 sample_code/             # Demo scripts
 src/                     # Main XCO class and functionality
-tests/                   # For code testing ()
-pyproject.toml           # Setup info for building  package  
-requirements.txt         # To install Dependencies for devel
+tests/                   # For code testing
+pyproject.toml           # Setup info for building package  
+requirements.txt         # To install dependencies for devel
 ```
-
-
-
 
 ## Useful links
 * https://creativecommons.org/licenses/
 * https://xeno-canto.org/explore/api
 
 ## Limitation
-* Apparently, only 1 country and 1 species per request allowed by XC API
+* Only 1 country and 1 species per request allowed by XC API
 * Only 1 request per second allowed by XC API
 
 ## License

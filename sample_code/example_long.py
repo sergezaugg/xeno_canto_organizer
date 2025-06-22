@@ -34,7 +34,8 @@ xc.download_audio_files()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(conversion_fs = 24000)
 # Extract spectrograms from segments and store as PNG
-xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, equalize = True, colormap='viridis', eps = 1e-10)
+xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, max_segm_per_file = 12, 
+                        equalize = True, colormap='viridis', eps = 1e-10)
 # (optional) load and explore meta-data
 df_meta = pd.read_pickle(os.path.join(xc.start_path, 'downloaded_data_meta.pkl'))
 df_meta.head()
@@ -46,12 +47,16 @@ df_meta.head()
 # The pre-downloaded mp3 files can be reprocessed with different parameters 
 # Point XCO to the dir with pre-downloaded mp33
 xc = xco.XCO(start_path = './temp_xc_project')
+
 # Make wavs with fs = 20000 and then short spectrogram 
 xc.mp3_to_wav(conversion_fs = 20000)
-xc.extract_spectrograms(fs_tag = 20000, segm_duration = 0.202, segm_step = 0.5, win_siz = 256, win_olap = 220.5, max_segm_per_file = 20, equalize = True, colormap='gray')
+xc.extract_spectrograms(fs_tag = 20000, segm_duration = 0.202, segm_step = 0.5, win_siz = 256, win_olap = 220.5, max_segm_per_file = 20, 
+                        equalize = True, colormap='gray')
+
 # Make  Make wavs with fs = 16000 and then long spectrogram 
 xc.mp3_to_wav(conversion_fs = 16000)
-xc.extract_spectrograms(fs_tag = 16000, segm_duration = 1.738, segm_step = 0.95, win_siz = 256, win_olap = 220.00, max_segm_per_file = 20, equalize = False, colormap='gray')
+xc.extract_spectrograms(fs_tag = 16000, segm_duration = 1.738, segm_step = 0.95, win_siz = 256, win_olap = 220.00, max_segm_per_file = 20, 
+                        equalize = False, colormap='viridis')
 
 
 
