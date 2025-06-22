@@ -4,7 +4,6 @@
 # --------------
 
 import os
-# dev
 import src.xeno_canto_organizer.xco as xco
 # make a projects dir, if it does not already exist
 if not os.path.isdir('./temp_xc_project'):

@@ -17,7 +17,6 @@ from PIL import Image
 import struct
 from maad import sound
 import subprocess
-# import yaml
 import datetime
 from importlib.resources import files
 

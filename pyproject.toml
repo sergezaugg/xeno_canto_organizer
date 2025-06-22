@@ -1,22 +1,22 @@
 [build-system]
 requires = ["setuptools >= 77.0.3"]
 build-backend = "setuptools.build_meta"
+      
+[tool.setuptools.packages.find]
+where = ["src"]  
+include = ["xeno_canto_organizer*"]  
 
 [project]
 name = "xeno_canto_organizer" 
-version = "v0.9.11"
-
+version = "v0.9.12"
 dependencies = [
     "pandas==2.2.3",
     "pillow==11.1.0",
-    "PyYAML==6.0.2",
     "requests==2.32.3",
-    "scikit-image==0.25.2",
     "scikit-maad==1.4.3",
     "scipy==1.15.2",
     "Unidecode==1.3.8",
 ]
-
 authors = [
   { name="Serge Zaugg", email="author@example.com" },
 ]
