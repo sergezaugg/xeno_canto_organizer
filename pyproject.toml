@@ -8,7 +8,7 @@ include = ["xeno_canto_organizer*"]
 
 [project]
 name = "xeno_canto_organizer" 
-version = "v0.9.14"
+version = "v0.9.15"
 dependencies = [
     "pandas==2.2.3",
     "pillow==11.1.0",
