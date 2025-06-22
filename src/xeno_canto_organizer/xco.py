@@ -17,8 +17,10 @@ from PIL import Image
 import struct
 from maad import sound
 import subprocess
-import yaml
+# import yaml
 import datetime
+from importlib.resources import files
+
 
 class XCO():
 
@@ -99,14 +101,14 @@ class XCO():
             template: (str), which template to use. Valid values are "mini", "n_europe", "sw_europe", "parus"
         Returns: Writes a json file to disc
         """
-        from importlib.resources import files
         # hack to be able to run this function in dev mode (interactive) and also when called from within a package
-        import __main__
-        if hasattr(__main__, '__file__'): # Running as a script or module (package)
+        try: # for packaged module 
             path_json = "xeno_canto_organizer.sample_json"
-        else: # Running in an interactive session
+            files(path_json)
+        except: # for dev
             path_json = "src.xeno_canto_organizer.sample_json"
-        # mian functionality 
+            files(path_json)
+        # main functionality 
         if template == "mini":
             with files(path_json).joinpath("xc_downl_mini.json").open("r") as f:
                 dl_params = json.load(f)   
@@ -116,9 +118,6 @@ class XCO():
         elif template == "sw_europe":
             with files(path_json).joinpath("xc_downl_sw_europe.json").open("r") as f:
                 dl_params = json.load(f)                      
-        elif template == "sw_europe_small":
-            with files(path_json).joinpath("xc_downl_sw_eur_small.json").open("r") as f:
-                dl_params = json.load(f)            
         elif template == "parus":
             with files(path_json).joinpath("xc_downl_parus.json").open("r") as f:
                 dl_params = json.load(f)    
@@ -377,4 +376,3 @@ if __name__ == "__main__":
     
 
 
- 

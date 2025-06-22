@@ -20,7 +20,7 @@ dependencies = [
 authors = [
   { name="Serge Zaugg", email="author@example.com" },
 ]
-description = "a Python toolkit to prepare Xeno-Canto bio-acoustic audio files for machine learning projects"
+description = "A Python toolkit to prepare Xeno-Canto bio-acoustic audio files for machine learning projects"
 readme = "README.md"
 requires-python = ">=3.12"
 classifiers = [

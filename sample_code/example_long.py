@@ -7,13 +7,7 @@
 #---------------------------------------
 import os
 import pandas as pd
-
-
-# dev
-import src.xeno_canto_organizer.xco as xco
-# usage
 import xeno_canto_organizer.xco as xco
-
 
 # make a projects dir, if it does not already exist
 if not os.path.isdir('./temp_xc_project'):
@@ -50,7 +44,6 @@ df_meta.head()
 #---------------------------------------
 # Open a new session
 # The pre-downloaded mp3 files can be reprocessed with different parameters 
-import xco 
 # Point XCO to the dir with pre-downloaded mp33
 xc = xco.XCO(start_path = './temp_xc_project')
 # Make wavs with fs = 20000 and then short spectrogram 

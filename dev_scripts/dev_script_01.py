@@ -1,12 +1,11 @@
 # --------------
 # Author : Serge Zaugg
-# Description : Minimalistic demo example of xco usage in practice
-# For real projects we recommend using a dir outside if this repo
+# Description : For devel only : assess code in interactive mode 
 # --------------
 
 import os
-import xeno_canto_organizer.xco as xco
-
+# dev
+import src.xeno_canto_organizer.xco as xco
 # make a projects dir, if it does not already exist
 if not os.path.isdir('./temp_xc_project'):
     os.makedirs('./temp_xc_project')
@@ -21,16 +20,8 @@ xc.download_audio_files()
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
 xc.mp3_to_wav(conversion_fs = 24000)
 # Extract spectrograms from segments and store as PNG
-xc.extract_spectrograms(
-    fs_tag = 24000, 
-    segm_duration = 1.0, 
-    segm_step = 0.5, 
-    win_siz = 512, 
-    win_olap = 192, 
-    max_segm_per_file = 12, 
-    equalize = True, 
-    colormap='viridis', 
-    )
+xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, win_olap = 192, 
+    max_segm_per_file = 12, equalize = True, colormap='viridis')
 
 
 
