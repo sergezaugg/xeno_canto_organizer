@@ -16,7 +16,12 @@
 - The complete download and preparation process can be handled and replicated with a small python script (example provided)
 - Github repo of two ML project based on XCO are [IDNN](https://github.com/sergezaugg/feature_extraction_idnn) and [SAEC](https://github.com/sergezaugg/feature_extraction_saec)
 
-## Installation
+
+## Installation (usage)
+
+- TBW soon
+
+## Installation (devel)
 
 1. **Clone (or download) the repository:**
 
@@ -36,15 +41,13 @@
 
 ```
 # primary
-xco.py                   # Main XCO class and functionality
-sample_code/             # Demo scripts
-sample_json/             # Example json files with download parameters
-requirements.txt         # Dependencies
-
-# devel
-config.yaml              # Optional configuration of url to xc api
-spec/                    # Used for dev only 
 images/                  # Images for the readme
+dev_scripts/             # Misc code used fo development
+sample_code/             # Demo scripts
+src/                     # Main XCO class and functionality
+tests/                   # For code testing ()
+pyproject.toml           # Setup info for building  package  
+requirements.txt         # To install Dependencies for devel
 ```
 
 ## Usage 

@@ -17,15 +17,14 @@ from PIL import Image
 import struct
 from maad import sound
 import subprocess
-import yaml
 import datetime
+from importlib.resources import files
+
 
 class XCO():
 
-    def __init__(self, start_path):
-        with open('./config.yaml') as f:
-            conf = yaml.safe_load(f)
-        self.XC_API_URL = conf['XC_API_URL']
+    def __init__(self, start_path, XC_API_URL = 'https://www.xeno-canto.org/api/2/recordings'):
+        self.XC_API_URL = XC_API_URL
         self.start_path = start_path 
         self.download_tag = 'downloaded_data' 
         self.df_recs = "not yet initializes"
@@ -43,7 +42,7 @@ class XCO():
     
     def _clean_xc_filenames(self, s, max_string_size):
         """
-        Description : keep only alphanumeric characters in a strin and remove '.mp3'
+        Description : keep only alphanumeric characters in a string and remove '.mp3'
         """
         stri = s.replace('.mp3', '')
         stri = unidecode.unidecode(stri)
@@ -101,27 +100,32 @@ class XCO():
             template: (str), which template to use. Valid values are "mini", "n_europe", "sw_europe", "parus"
         Returns: Writes a json file to disc
         """
+        # hack to be able to run this function in dev mode (interactive) and also when called from within a package
+        try: # for packaged module 
+            path_json = "xeno_canto_organizer.sample_json"
+            files(path_json)
+        except: # for dev
+            path_json = "src.xeno_canto_organizer.sample_json"
+            files(path_json)
+        # main functionality 
         if template == "mini":
-            with open(os.path.join('./sample_json/xc_downl_mini.json')) as f:
-                dl_params = json.load(f)
+            with files(path_json).joinpath("xc_downl_mini.json").open("r") as f:
+                dl_params = json.load(f)   
         elif template == "n_europe":
-            with open(os.path.join('./sample_json/xc_downl_n_europe.json')) as f:
-                dl_params = json.load(f)
-        elif template == "sw_europe":
-            with open(os.path.join('./sample_json/xc_downl_sw_europe.json')) as f:
+            with files(path_json).joinpath("xc_downl_n_europe.json").open("r") as f:
                 dl_params = json.load(f)    
-        elif template == "sw_europe_small":
-            with open(os.path.join('./sample_json/xc_downl_sw_eur_small.json')) as f:
-                dl_params = json.load(f)  
+        elif template == "sw_europe":
+            with files(path_json).joinpath("xc_downl_sw_europe.json").open("r") as f:
+                dl_params = json.load(f)                      
         elif template == "parus":
-            with open(os.path.join('./sample_json/xc_downl_parus.json')) as f:
-                dl_params = json.load(f)      
+            with files(path_json).joinpath("xc_downl_parus.json").open("r") as f:
+                dl_params = json.load(f)    
         elif template == "corvidae":
-            with open(os.path.join('./sample_json/xc_downl_corvidae.json')) as f:
-                dl_params = json.load(f)      
+            with files(path_json).joinpath("xc_downl_corvidae.json").open("r") as f:
+                dl_params = json.load(f)        
         else:
             return("Please provide a valid value for argument 'template'")
-    
+        
         with open(os.path.join(self.start_path, filename), 'w') as f:
             json.dump(dl_params, f,  indent=4)
 
@@ -371,4 +375,3 @@ if __name__ == "__main__":
     
 
 
- 
