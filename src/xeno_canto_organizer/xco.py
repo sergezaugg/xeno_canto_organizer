@@ -364,7 +364,7 @@ class XCO():
                         X = X/X.max()
                         # capture when X/X.max() went wrong (mostly at file start due to many zeros: fade-in)
                         if np.isnan(X).sum() > 0:   
-                            print(np.isnan(X).sum(), X.min(), X.max())
+                            # print(np.isnan(X).sum(), X.min(), X.max())
                             self.failed_spectro_li.append(wavFileName + " sec " + str(startSec))
                             continue
                         # apply color map  

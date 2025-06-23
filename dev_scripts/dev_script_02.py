@@ -21,14 +21,14 @@ xc = xco.XCO(start_path = 'd:/xc_real_projects/test')
 # Download the files 
 # xc.download_audio_files(verbose = False)
 # Convert mp3s to wav with a specific sampling rate (requires ffmpeg to be installed)
-xc.mp3_to_wav(conversion_fs = 24000, verbose = False)
+xc.mp3_to_wav(conversion_fs = 24000, verbose = True)
 
 len(xc.failed_wav_conv_li)
 
 # Extract spectrograms from segments and store as PNG
 xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, 
                         win_olap = 192, max_segm_per_file = 12, 
-                        equalize = True, colormap='viridis', verbose = False, eps = 1e-10)
+                        equalize = True, colormap='viridis', verbose = True, eps = 1e-10)
 
 xc.extract_spectrograms(fs_tag = 24000, segm_duration = 0.202, segm_step = 0.5, win_siz = 256, 
                         win_olap = 220.5, max_segm_per_file = 20, 
