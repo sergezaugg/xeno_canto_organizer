@@ -223,22 +223,32 @@ class XCO():
                 os.mkdir(path_destin)
             all_mp3s = [a for a in os.listdir(path_source) if "mp3" in a]
             # loop over mp3 file and convert to wav by call to ffmpeg
+            self.failed_wav_conv_li = []
             for ii, finam in enumerate(all_mp3s):
                 if verbose:
                     print("Converting to wav: " + finam)
                 patin = os.path.join(path_source, finam)
                 paout = os.path.join(path_destin, finam.replace('.mp3','.wav' ))
                 try:
-                    subprocess.call(['ffmpeg', 
+                    retcode = subprocess.call(['ffmpeg', 
                         '-y', # -y overwrite without asking 
                         '-i', patin, # '-i' # infile must be specifitd after -i
                         '-ar', str(conversion_fs), # -ar rate set audio sampling rate (in Hz)
                         '-ac', '1', # stereo to mono, take left channel # -ac channels set number of audio channels
                         paout
                         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    if retcode != 0:
+                        print(f"Process failed with return code {retcode}", " --- File: " + finam)
+                        self.failed_wav_conv_li.append(finam)
                 except:
                     print("An exception occurred during mp3-to-wav conversion with ffmpeg!")
-            print("Done! converted " + str(ii+1) + " files") 
+                    self.failed_wav_conv_li.append(finam)
+            # finishin up        
+            n_fails = len(self.failed_wav_conv_li)        
+            print("Done! successfully converted: " + str(ii+1-n_fails) + ' files' + ', failed: ' + str(n_fails))
+
+
+
 
     def extract_spectrograms(self, fs_tag, segm_duration, segm_step = 1.0, win_siz = 256, win_olap = 128,  
                              equalize = True, max_segm_per_file = 100, colormap = 'gray', eps = 1e-10, verbose = False):
