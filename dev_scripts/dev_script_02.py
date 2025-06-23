@@ -28,11 +28,11 @@ len(xc.failed_wav_conv_li)
 # Extract spectrograms from segments and store as PNG
 xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.0, segm_step = 0.5, win_siz = 512, 
                         win_olap = 192, max_segm_per_file = 12, 
-                        equalize = True, colormap='viridis', verbose = False)
+                        equalize = True, colormap='viridis', verbose = False, eps = 1e-10)
 
 xc.extract_spectrograms(fs_tag = 24000, segm_duration = 0.202, segm_step = 0.5, win_siz = 256, 
                         win_olap = 220.5, max_segm_per_file = 20, 
-                        equalize = True, colormap='gray',  verbose = True)
+                        equalize = True, colormap='gray',  verbose = False)
 
 xc.extract_spectrograms(fs_tag = 24000, segm_duration = 1.738, segm_step = 0.95, win_siz = 256, 
                         win_olap = 220.00, max_segm_per_file = 20, 
